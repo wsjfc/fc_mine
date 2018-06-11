@@ -7,24 +7,49 @@ import base64
 import json
 from collections import OrderedDict
 
+try_max_times = 50
+try_sep = 0.000001
+
+def try_x_times_every_y_seconds(x=try_max_times, y=try_sep):
+    def dec_dec(func):
+        def wrapper(*args, **kw):
+            for xi in range(x):
+                try:
+                    fb = func(*args, **kw)
+                except requests.exceptions.ConnectionError as e:
+                    print('requests.exceptions.ConnectionError %s' % e)
+                except requests.exceptions.ConnectTimeout as e:
+                    print('requests.exceptions.ConnectTimeout %s' % e)
+                except json.JSONDecodeError as e:
+                    print('json.JSONDecodeError %s' % e)
+                else:
+                    return fb
+                finally:
+                    time.sleep(y)
+            raise requests.exceptions.ConnectTimeout('timeout')
+        return wrapper
+    return dec_dec
+
 class Fcoin():
     def __init__(self,base_url = 'https://api.fcoin.com/v2/'):
         self.base_url = base_url
 
     def auth(self, key, secret):
         self.key = bytes(key,'utf-8') 
-        self.secret = bytes(secret, 'utf-8') 
+        self.secret = bytes(secret, 'utf-8')
 
-
+    @try_x_times_every_y_seconds()
     def public_request(self, method, api_url, **payload):
         """request public url"""
         r_url = self.base_url + api_url
+        start_time = time.time()
         try:
             r = requests.request(method, r_url, params=payload)
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
             print(err)
         if r.status_code == 200:
+            print("%s takes %f seconds" % (api_url, time.time() - start_time))
             return r.json()
 
     def get_signed(self, sig_str):
@@ -33,7 +58,7 @@ class Fcoin():
         signature = base64.b64encode(hmac.new(self.secret, sig_str, digestmod=hashlib.sha1).digest())
         return signature
 
-
+    @try_x_times_every_y_seconds()
     def signed_request(self, method, api_url, **payload):
         """request a signed url"""
 
@@ -71,6 +96,7 @@ class Fcoin():
             print(err)
             print(r.text)
         if r.status_code == 200:
+            print('succeed.')
             return r.json()
 
 

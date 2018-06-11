@@ -1,7 +1,5 @@
-from fcoin import Fcoin
-#if python3 use fcoin3
-#from fcoin3 import Fcoin
-
+from fcoin3 import Fcoin
+import os
 
 fcoin = Fcoin()
 
@@ -9,7 +7,10 @@ print(fcoin.get_symbols())
 
 print(fcoin.get_currencies())
 
-fcoin.auth('you-key', 'you-secret') 
+api_key = os.environ["FCOIN_API_KEY"]
+api_sec = os.environ["FCOIN_API_SECRET"]
+
+fcoin.auth(api_key, api_sec)
 
 print(fcoin.get_balance())
 
