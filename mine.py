@@ -84,22 +84,22 @@ def mining(fcoin0, fcoin1):
     usdt_balance = 0
     balances = fcoin0.get_balance()
     for bl in balances['data']:
-        if bl['currency'] == 'usdt':
+        if bl['currency'] == 'eth':
             usdt_balance = float(bl['available'])
 
     etc_balance = 0
     balances = fcoin1.get_balance()
     for bl in balances['data']:
-        if bl['currency'] == 'etc':
+        if bl['currency'] == 'omg':
             etc_balance = float(bl['available'])
 
-    print("initial balance usdt: %f" % usdt_balance)
-    print("initial balance etc: %f" % etc_balance)
+    print("initial balance eth: %f" % usdt_balance)
+    print("initial balance omg: %f" % etc_balance)
 
     trading_amont = 0.01
     while etc_balance > 0 and usdt_balance > 0:
         print("####### start trading session########")
-        trading_sym = 'etcusdt'
+        trading_sym = 'omgeth'
 
         ret = fcoin0.get_market_depth('L20', trading_sym)
         if ret['status'] == 0 and \
@@ -119,10 +119,10 @@ def mining(fcoin0, fcoin1):
             balances_etc  = fcoin1.get_balance()
             if balances_usdt != None and balances_etc != None:
                 for bl in balances_usdt['data']:
-                    if bl['currency'] == 'usdt':
+                    if bl['currency'] == 'eth':
                         usdt_balance = float(bl['available'])
                 for bl in balances_etc['data']:
-                    if bl['currency'] == 'etc':
+                    if bl['currency'] == 'omg':
                         etc_balance = float(bl['available'])
 
                 need_usdt_amount = trade_price * etc_balance * 0.99
@@ -132,13 +132,13 @@ def mining(fcoin0, fcoin1):
 
                 trading_amont = (trading_usdt_amount/trade_price)
                 print('trading amount: %f' % trading_amont)
-
-                trade_price = "{0:.2f}".format(trade_price)
+                input("Press Enter to continue...")
+                trade_price = "{0:.4f}".format(trade_price)
                 trade_price = float(trade_price)
 
-                trading_amont = "{0:.4f}".format(trading_amont)
+                trading_amont = "{0:.0f}".format(trading_amont)
                 trading_amont = float(trading_amont)
-                if trading_amont > 0.01:
+                if trading_amont > 0.0001:
                     print("sell&buy...")
                     #fcoin.sell(trading_sym, str(trade_price), trading_amont)
                     #fcoin.buy(trading_sym, str(trade_price), trading_amont)
@@ -176,40 +176,40 @@ def mining(fcoin0, fcoin1):
                 else:
                     print("trading_amont should above 0.")
 
-                time.sleep(1)
+                #time.sleep(1)
                 print("-------- end --------")
 
                 # check to decide which is 'fcoin0' account, according to usdt balance
                 usdt_balance_0 = 0
                 balances = fcoin0.get_balance()
                 for bl in balances['data']:
-                    if bl['currency'] == 'usdt':
+                    if bl['currency'] == 'eth':
                         usdt_balance_0 = float(bl['available'])
 
                 usdt_balance_1 = 0
                 balances = fcoin1.get_balance()
                 for bl in balances['data']:
-                    if bl['currency'] == 'usdt':
+                    if bl['currency'] == 'eth':
                         usdt_balance_1 = float(bl['available'])
 
                 if usdt_balance_0 < usdt_balance_1:
                     print("switch default usdt account.")
                     tmp_fcoin = copy.deepcopy(fcoin0)
-                    fcoin0 = copy.deepcopy(tmp_fcoin)
+                    fcoin0 = copy.deepcopy(fcoin1)
                     fcoin1 = copy.deepcopy(tmp_fcoin)
 
-        input("Press Enter to continue...")
+        #input("Press Enter to continue...")
 
     usdt_balance = 0
     balances = fcoin0.get_balance()
     for bl in balances['data']:
-        if bl['currency'] == 'usdt':
+        if bl['currency'] == 'eth':
             usdt_balance = float(bl['available'])
 
     etc_balance = 0
     balances = fcoin1.get_balance()
     for bl in balances['data']:
-        if bl['currency'] == 'etc':
+        if bl['currency'] == 'omg':
             etc_balance = float(bl['available'])
     print("final balance etc: %f" % etc_balance)
     print("final balance usdt: %f" % usdt_balance)
@@ -235,6 +235,23 @@ if __name__ == "__main__":
     if MODE == 'check':
         check(fcoin=fcoin0)
     elif MODE == 'mine':
+        usdt_balance_0 = 0
+        balances = fcoin0.get_balance()
+        for bl in balances['data']:
+            if bl['currency'] == 'eth':
+                usdt_balance_0 = float(bl['available'])
+
+        usdt_balance_1 = 0
+        balances = fcoin1.get_balance()
+        for bl in balances['data']:
+            if bl['currency'] == 'eth':
+                usdt_balance_1 = float(bl['available'])
+
+        if usdt_balance_0 < usdt_balance_1:
+            print("switch default usdt account.")
+            tmp_fcoin = copy.deepcopy(fcoin0)
+            fcoin0 = copy.deepcopy(fcoin1)
+            fcoin1 = copy.deepcopy(tmp_fcoin)
         mining(fcoin0=fcoin0, fcoin1=fcoin1)
     elif MODE == 'test':
         balances = (fcoin0.get_balance())
