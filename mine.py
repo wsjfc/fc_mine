@@ -146,12 +146,12 @@ def mining(fcoin0, fcoin1):
                     def sell_(params):
                         trading_sym, trade_price, trading_amont = params
                         print('sell at %s' % time.time())
-                        #fcoin1.sell(trading_sym, str(trade_price), trading_amont)
+                        fcoin1.sell(trading_sym, str(trade_price), trading_amont)
 
                     def buy_(params):
                         trading_sym, trade_price, trading_amont = params
                         print('buy  at %s' % time.time())
-                        #fcoin0.buy(trading_sym, str(trade_price), trading_amont)
+                        fcoin0.buy(trading_sym, str(trade_price), trading_amont)
 
                     async def buyNsell():
                         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -193,9 +193,12 @@ def mining(fcoin0, fcoin1):
                         usdt_balance_1 = float(bl['available'])
 
                 if usdt_balance_0 < usdt_balance_1:
+                    print("switch default usdt account.")
                     tmp_fcoin = copy.deepcopy(fcoin0)
                     fcoin0 = copy.deepcopy(tmp_fcoin)
                     fcoin1 = copy.deepcopy(tmp_fcoin)
+
+        input("Press Enter to continue...")
 
     usdt_balance = 0
     balances = fcoin0.get_balance()
