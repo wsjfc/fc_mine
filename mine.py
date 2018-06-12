@@ -79,28 +79,28 @@ def mine_(trades, fcoin):
     return
 
 def get_balance(fcoin):
-    omg_balance = 0
     eth_balance = 0
+    usdt_balance = 0
     balances = fcoin.get_balance()
     for bl in balances['data']:
-        if bl['currency'] == 'omg':
-            omg_balance = float(bl['available'])
-        elif bl['currency'] == 'eth':
+        if bl['currency'] == 'eth':
             eth_balance = float(bl['available'])
+        elif bl['currency'] == 'usdt':
+            usdt_balance = float(bl['available'])
 
-    return omg_balance, eth_balance
+    return eth_balance, usdt_balance
 
 def mining(fcoin):
     # get initial balance
-    omg_balance, eth_balance = get_balance(fcoin=fcoin)
-    print("initial balance omg: %f" % omg_balance)
+    eth_balance, usdt_balance = get_balance(fcoin=fcoin)
     print("initial balance eth: %f" % eth_balance)
+    print("initial balance usdt: %f" % usdt_balance)
 
     trading_amont = 0.01
-    while omg_balance > 0 and eth_balance > 0:
+    while eth_balance > 0 and usdt_balance > 0:
     #while True:
         print("####### start trading session########")
-        trading_sym = 'omgeth'
+        trading_sym = 'ethusdt'
 
         ret = fcoin.get_market_depth('L20', trading_sym)
         if ret['status'] == 0 and \
@@ -114,72 +114,72 @@ def mining(fcoin):
             print('trading price:%f' % trade_price)
 
             # get eth amount
-            omg_balance = 0
             eth_balance = 0
+            usdt_balance = 0
             balances = fcoin.get_balance()
-            for bl in balances['data']:
-                if bl['currency'] == 'omg':
-                    omg_balance = float(bl['available'])
-                elif bl['currency'] == 'eth':
-                    eth_balance = float(bl['available'])
+            if balances != None:
+                for bl in balances['data']:
+                    if bl['currency'] == 'eth':
+                        eth_balance = float(bl['available'])
+                    elif bl['currency'] == 'usdt':
+                        usdt_balance = float(bl['available'])
 
-            need_eth_amount = trade_price * omg_balance * 0.99
-            trading_eth_amount = eth_balance * 0.99
-            if need_eth_amount < trading_eth_amount:
-                trading_eth_amount = need_eth_amount
+                need_usdt_amount = trade_price * eth_balance * 0.99
+                trading_usdt_amount = usdt_balance * 0.99
+                if need_usdt_amount < trading_usdt_amount:
+                    trading_usdt_amount = need_usdt_amount
 
-            trading_amont = (trading_eth_amount/trade_price)
-            print('trading amount: %f' % trading_amont)
+                trading_amont = (trading_usdt_amount/trade_price)
+                print('trading amount: %f' % trading_amont)
 
-            trade_price = "{0:.6f}".format(trade_price)
-            trade_price = float(trade_price)
+                trade_price = "{0:.2f}".format(trade_price)
+                trade_price = float(trade_price)
 
-            trading_amont = "{0:.4f}".format(trading_amont)
-            trading_amont = float(trading_amont)
-            if trading_amont > 0.01:
-                print("sell&buy...")
-                #fcoin.sell(trading_sym, str(trade_price), trading_amont)
-                #fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                trading_amont = "{0:.4f}".format(trading_amont)
+                trading_amont = float(trading_amont)
+                if trading_amont > 0.01:
+                    print("sell&buy...")
+                    #fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                    #fcoin.buy(trading_sym, str(trade_price), trading_amont)
 
-                def sell_(params):
-                    trading_sym, trade_price, trading_amont = params
-                    print('sell at %s' % time.time())
-                    fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                    def sell_(params):
+                        trading_sym, trade_price, trading_amont = params
+                        print('sell at %s' % time.time())
+                        fcoin.sell(trading_sym, str(trade_price), trading_amont)
 
-                def buy_(params):
-                    trading_sym, trade_price, trading_amont = params
-                    print('buy  at %s' % time.time())
-                    fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                    def buy_(params):
+                        trading_sym, trade_price, trading_amont = params
+                        print('buy  at %s' % time.time())
+                        fcoin.buy(trading_sym, str(trade_price), trading_amont)
 
-                async def buyNsell():
-                    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-                        loop = asyncio.get_event_loop()
-                        futures = [
-                            loop.run_in_executor(
-                                executor,
-                                sell_,
-                                (trading_sym, trade_price, trading_amont)
-                            ),
-                            loop.run_in_executor(
-                                executor,
-                                buy_,
-                                (trading_sym, trade_price, trading_amont)
-                            )
-                        ]
-                        for response in await asyncio.gather(*futures):
-                            pass
+                    async def buyNsell():
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                            loop = asyncio.get_event_loop()
+                            futures = [
+                                loop.run_in_executor(
+                                    executor,
+                                    sell_,
+                                    (trading_sym, trade_price, trading_amont)
+                                ),
+                                loop.run_in_executor(
+                                    executor,
+                                    buy_,
+                                    (trading_sym, trade_price, trading_amont)
+                                )
+                            ]
+                            for response in await asyncio.gather(*futures):
+                                pass
 
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(buyNsell())
-            else:
-                print("trading_amont should above 0.")
-            print("-------- end --------")
-            #time.sleep(10)
+                    loop = asyncio.get_event_loop()
+                    loop.run_until_complete(buyNsell())
+                else:
+                    print("trading_amont should above 0.")
+                print("-------- end --------")
+            time.sleep(2)
 
-
-    omg_balance, eth_balance = get_balance(fcoin=fcoin)
-    print("final balance omg: %f" % omg_balance)
+    eth_balance, usdt_balance = get_balance(fcoin=fcoin)
     print("final balance eth: %f" % eth_balance)
+    print("final balance usdt: %f" % usdt_balance)
 
     return
 
