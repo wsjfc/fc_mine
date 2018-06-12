@@ -136,8 +136,9 @@ def mining(fcoin0, fcoin1):
                 trade_price = "{0:.4f}".format(trade_price)
                 trade_price = float(trade_price)
 
-                trading_amont = "{0:.0f}".format(trading_amont)
+                trading_amont = "{0:.4f}".format(trading_amont)
                 trading_amont = float(trading_amont)
+                trading_amont -= 0.001
                 if trading_amont > 0.0001:
                     print("sell&buy...")
                     #fcoin.sell(trading_sym, str(trade_price), trading_amont)
@@ -151,7 +152,7 @@ def mining(fcoin0, fcoin1):
                     def buy_(params):
                         trading_sym, trade_price, trading_amont = params
                         print('buy  at %s' % time.time())
-                        fcoin0.buy(trading_sym, str(trade_price), trading_amont)
+                        fcoin0.buy(trading_sym, str(trade_price), trading_amont * 0.99)
 
                     async def buyNsell():
                         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
