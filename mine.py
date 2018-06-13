@@ -144,12 +144,16 @@ def mining(fcoin):
                 def sell_(params):
                     trading_sym, trade_price, trading_amont = params
                     print('sell at %s' % time.time())
-                    fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                    status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                    while status['status'] != 0:
+                        fcoin.sell(trading_sym, str(trade_price), trading_amont)
 
                 def buy_(params):
                     trading_sym, trade_price, trading_amont = params
                     print('buy  at %s' % time.time())
-                    fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                    status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                    while status['status'] != 0:
+                        fcoin.buy(trading_sym, str(trade_price), trading_amont)
 
                 async def buyNsell():
                     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -212,10 +216,14 @@ def mining(fcoin):
                                 order_amount = 0.99 * usdt_balance/lowest_ask
                                 order_amount = "{0:.2f}".format(float(order_amount))
                                 order_amount = float(order_amount)
-                            fcoin.buy(trading_sym, lowest_ask, order_amount)
+                            status = fcoin.buy(trading_sym, lowest_ask, order_amount)
+                            while status['status'] != 0:
+                                status = fcoin.buy(trading_sym, lowest_ask, order_amount)
 
                         elif order_side == 'sell':
-                            fcoin.sell(trading_sym, highest_bid, order_amount)
+                            status = fcoin.sell(trading_sym, highest_bid, order_amount)
+                            while status['status'] != 0:
+                                status = fcoin.sell(trading_sym, highest_bid, order_amount)
 
                     waiting = False
 
