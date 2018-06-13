@@ -83,9 +83,9 @@ def get_balance(fcoin):
     eth_balance = 0
     balances = fcoin.get_balance()
     for bl in balances['data']:
-        if bl['currency'] == 'omg':
+        if bl['currency'] == 'ft':
             omg_balance = float(bl['available'])
-        elif bl['currency'] == 'eth':
+        elif bl['currency'] == 'usdt':
             eth_balance = float(bl['available'])
 
     return omg_balance, eth_balance
@@ -93,15 +93,15 @@ def get_balance(fcoin):
 def mining(fcoin):
     # get initial balance
     omg_balance, eth_balance = get_balance(fcoin=fcoin)
-    print("initial balance omg: %f" % omg_balance)
-    print("initial balance eth: %f" % eth_balance)
+    print("initial balance ft: %f" % omg_balance)
+    print("initial balance usdt: %f" % eth_balance)
 
     trading_amont = 0.01
     trade_ctr = 0
     while omg_balance > 0 and eth_balance > 0:
     #while True:
         print("####### start trading session########")
-        trading_sym = 'omgeth'
+        trading_sym = 'ftusdt'
 
         ret = fcoin.get_market_depth('L20', trading_sym)
         if ret['status'] == 0 and \
@@ -112,9 +112,9 @@ def mining(fcoin):
             eth_balance = 0
             balances = fcoin.get_balance()
             for bl in balances['data']:
-                if bl['currency'] == 'omg':
+                if bl['currency'] == 'ft':
                     omg_balance = float(bl['available'])
-                elif bl['currency'] == 'eth':
+                elif bl['currency'] == 'usdt':
                     eth_balance = float(bl['available'])
 
             lowest_ask = ret['data']['asks'][0]
@@ -178,7 +178,7 @@ def mining(fcoin):
             waiting = True
             while waiting:
                 time.sleep(2)
-                orders = fcoin.list_orders(symbol='omgeth', states='submitted')
+                orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
                 print(orders)
                 if len(orders['data']) == 0:
                     waiting = False
@@ -189,8 +189,8 @@ def mining(fcoin):
             print("trade times: %d" % trade_ctr)
 
     omg_balance, eth_balance = get_balance(fcoin=fcoin)
-    print("final balance omg: %f" % omg_balance)
-    print("final balance eth: %f" % eth_balance)
+    print("final balance ft: %f" % omg_balance)
+    print("final balance usdt: %f" % eth_balance)
 
     return
 
