@@ -201,6 +201,15 @@ def mining(fcoin):
                     highest_bid = ret['data']['bids'][0]
 
                     if order_side == 'buy':
+                        usdt_balance = 0
+                        balances = fcoin.get_balance()
+                        for bl in balances['data']:
+                            if bl['currency'] == 'usdt':
+                                usdt_balance = float(bl['available'])
+                        if usdt_balance < lowest_ask * order_amount:
+                            order_amount = 0.99 * usdt_balance/lowest_ask
+                            order_amount = "{0:.2f}".format(float(order_amount))
+                            order_amount = float(order_amount)
                         fcoin.buy(trading_sym, lowest_ask, order_amount)
 
                     elif order_side == 'sell':
