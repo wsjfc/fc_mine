@@ -137,7 +137,7 @@ def mining(fcoin):
 
             trading_amont = "{0:.2f}".format(trading_amont)
             trading_amont = float(trading_amont)
-            print('trading amount: ###--- %f ---### %f' % trading_amont, trading_amont/prev_trading_amount)
+            print('trading amount: ###--- %f ---### %f' % (trading_amont, trading_amont/prev_trading_amount))
             #input("Press Enter to continue...")
             if trading_amont > 5:
                 print("sell&buy...")
