@@ -135,7 +135,7 @@ def mining(fcoin):
             trade_price = "{0:.6f}".format(trade_price)
             trade_price = float(trade_price)
 
-            trading_amont = "{0:.4f}".format(trading_amont)
+            trading_amont = "{0:.2f}".format(trading_amont)
             trading_amont = float(trading_amont)
             #input("Press Enter to continue...")
             if trading_amont > 0.5:
@@ -176,6 +176,7 @@ def mining(fcoin):
 
             # check orders status
             waiting = True
+            wait_ctr = 0
             while waiting:
                 time.sleep(2)
                 orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
@@ -183,7 +184,13 @@ def mining(fcoin):
                 if len(orders['data']) == 0:
                     waiting = False
                 else:
+                    wait_ctr =+ 1
                     time.sleep(1)
+
+                if wait_ctr > 3:
+                    fcoin.cancel_order(orders['data']['id'])
+                    waiting = False
+                    break
 
             trade_ctr += 1
             print("trade times: %d" % trade_ctr)
