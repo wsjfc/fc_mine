@@ -106,13 +106,6 @@ def mining(fcoin):
         if ret['status'] == 0 and \
                 len(ret['data']['bids']) and \
                 len(ret['data']['asks']) > 0:
-            lowest_ask = ret['data']['asks'][0]
-            highest_bid = ret['data']['bids'][0]
-            print('lowest ask: %f, highest bid: %f.'
-                  % (lowest_ask, highest_bid))
-            trade_price = ((lowest_ask + highest_bid)/2)
-            print('trading price:%f' % trade_price)
-
             # get eth amount
             omg_balance = 0
             eth_balance = 0
@@ -122,6 +115,13 @@ def mining(fcoin):
                     omg_balance = float(bl['available'])
                 elif bl['currency'] == 'eth':
                     eth_balance = float(bl['available'])
+
+            lowest_ask = ret['data']['asks'][0]
+            highest_bid = ret['data']['bids'][0]
+            print('lowest ask: %f, highest bid: %f.'
+                  % (lowest_ask, highest_bid))
+            trade_price = ((lowest_ask + highest_bid)/2)
+            print('trading price:%f' % trade_price)
 
             need_eth_amount = trade_price * omg_balance * 0.99
             trading_eth_amount = eth_balance * 0.99
@@ -172,7 +172,17 @@ def mining(fcoin):
             else:
                 print("trading_amont should above 0.")
             print("-------- end --------")
-            #time.sleep(10)
+
+            # check orders status
+            waiting = True
+            while waiting:
+                orders = fcoin.list_orders(symbol='omgeth', states='submitted')
+                print(orders)
+                if len(orders['data']) == 0:
+                    waiting = False
+                else:
+                    time.sleep(1)
+
 
 
     omg_balance, eth_balance = get_balance(fcoin=fcoin)
@@ -198,8 +208,9 @@ if __name__ == "__main__":
         #eth_trades = ['fteth', 'zileth', 'icxeth', 'zipeth', 'omgeth']
         mining(fcoin=fcoin)
     elif MODE == 'test':
-        balances = (fcoin.get_balance())
-        currencies = []
-        for bl in balances['data']:
-            currencies.append(bl['currency'])
-        print(currencies)
+        while True:
+            ret = fcoin.get_market_depth('L20', 'omgeth')
+            lowest_ask = ret['data']['asks'][0]
+            highest_bid = ret['data']['bids'][0]
+            print('lowest ask: %f, highest bid: %f.'
+                  % (lowest_ask, highest_bid))
