@@ -130,7 +130,7 @@ def mining(fcoin):
                 trading_eth_amount = need_eth_amount
 
             trading_amont = (trading_eth_amount/trade_price)
-            print('trading amount: %f' % trading_amont)
+            print('trading amount: ###--- %f ---###' % trading_amont)
 
             trade_price = "{0:.6f}".format(trade_price)
             trade_price = float(trade_price)
@@ -178,7 +178,7 @@ def mining(fcoin):
             waiting = True
             wait_ctr = 0
             while waiting:
-                time.sleep(2)
+                time.sleep(3)
                 orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
                 print(orders)
                 if len(orders['data']) == 0:
