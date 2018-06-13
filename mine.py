@@ -97,6 +97,7 @@ def mining(fcoin):
     print("initial balance usdt: %f" % eth_balance)
 
     trading_amont = 0.01
+    prev_trading_amount = trading_amont
     trade_ctr = 0
     while omg_balance > 0 and eth_balance > 0:
     #while True:
@@ -130,15 +131,15 @@ def mining(fcoin):
                 trading_eth_amount = need_eth_amount
 
             trading_amont = (trading_eth_amount/trade_price)
-            print('trading amount: ###--- %f ---###' % trading_amont)
 
             trade_price = "{0:.6f}".format(trade_price)
             trade_price = float(trade_price)
 
             trading_amont = "{0:.2f}".format(trading_amont)
             trading_amont = float(trading_amont)
+            print('trading amount: ###--- %f ---### %f' % trading_amont, trading_amont/prev_trading_amount)
             #input("Press Enter to continue...")
-            if trading_amont > 0.5:
+            if trading_amont > 5:
                 print("sell&buy...")
                 def sell_(params):
                     trading_sym, trade_price, trading_amont = params
@@ -171,7 +172,7 @@ def mining(fcoin):
                 loop = asyncio.get_event_loop()
                 loop.run_until_complete(buyNsell())
             else:
-                print("trading_amont should above 0.")
+                print("trading_amont should above 5.")
             print("-------- end --------")
 
             # check orders status
@@ -188,8 +189,6 @@ def mining(fcoin):
                     time.sleep(1)
 
                 if wait_ctr > 3:
-                    fcoin.cancel_order(orders['data'][0]['id'])
-
                     order_amount = orders['data'][0]['amount']
                     order_price = orders['data'][0]['amount']
                     order_side = orders['data'][0]['side']
@@ -200,23 +199,27 @@ def mining(fcoin):
                     lowest_ask = ret['data']['asks'][0]
                     highest_bid = ret['data']['bids'][0]
 
-                    if order_side == 'buy':
-                        usdt_balance = 0
-                        balances = fcoin.get_balance()
-                        for bl in balances['data']:
-                            if bl['currency'] == 'usdt':
-                                usdt_balance = float(bl['available'])
-                        if usdt_balance < lowest_ask * order_amount:
-                            order_amount = 0.99 * usdt_balance/lowest_ask
-                            order_amount = "{0:.2f}".format(float(order_amount))
-                            order_amount = float(order_amount)
-                        fcoin.buy(trading_sym, lowest_ask, order_amount)
+                    cancel_status = fcoin.cancel_order(orders['data'][0]['id'])
+                    print("cancel order result: %s" % cancel_status)
+                    if cancel_status['status'] == 0:
+                        if order_side == 'buy':
+                            usdt_balance = 0
+                            balances = fcoin.get_balance()
+                            for bl in balances['data']:
+                                if bl['currency'] == 'usdt':
+                                    usdt_balance = float(bl['available'])
+                            if usdt_balance < lowest_ask * order_amount:
+                                order_amount = 0.99 * usdt_balance/lowest_ask
+                                order_amount = "{0:.2f}".format(float(order_amount))
+                                order_amount = float(order_amount)
+                            fcoin.buy(trading_sym, lowest_ask, order_amount)
 
-                    elif order_side == 'sell':
-                        fcoin.sell(trading_sym, highest_bid, order_amount)
+                        elif order_side == 'sell':
+                            fcoin.sell(trading_sym, highest_bid, order_amount)
 
                     waiting = False
 
+            prev_trading_amount = trading_amont
             trade_ctr += 1
             print("trade times: %d" % trade_ctr)
 
