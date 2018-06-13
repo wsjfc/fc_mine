@@ -97,6 +97,7 @@ def mining(fcoin):
     print("initial balance eth: %f" % eth_balance)
 
     trading_amont = 0.01
+    trade_ctr = 0
     while omg_balance > 0 and eth_balance > 0:
     #while True:
         print("####### start trading session########")
@@ -176,6 +177,7 @@ def mining(fcoin):
             # check orders status
             waiting = True
             while waiting:
+                time.sleep(2)
                 orders = fcoin.list_orders(symbol='omgeth', states='submitted')
                 print(orders)
                 if len(orders['data']) == 0:
@@ -183,7 +185,8 @@ def mining(fcoin):
                 else:
                     time.sleep(1)
 
-
+            trade_ctr += 1
+            print("trade times: %d" % trade_ctr)
 
     omg_balance, eth_balance = get_balance(fcoin=fcoin)
     print("final balance omg: %f" % omg_balance)
