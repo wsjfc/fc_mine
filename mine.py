@@ -184,13 +184,29 @@ def mining(fcoin):
                 if len(orders['data']) == 0:
                     waiting = False
                 else:
-                    wait_ctr =+ 1
+                    wait_ctr += 1
                     time.sleep(1)
 
                 if wait_ctr > 3:
-                    fcoin.cancel_order(orders['data']['id'])
+                    fcoin.cancel_order(orders['data'][0]['id'])
+
+                    order_amount = orders['data'][0]['amount']
+                    order_price = orders['data'][0]['amount']
+                    order_side = orders['data'][0]['side']
+                    order_amount = "{0:.2f}".format(float(order_amount))
+                    order_amount = float(order_amount)
+                    ret = fcoin.get_market_depth('L20', trading_sym)
+
+                    lowest_ask = ret['data']['asks'][0]
+                    highest_bid = ret['data']['bids'][0]
+
+                    if order_side == 'buy':
+                        fcoin.buy(trading_sym, lowest_ask, order_amount)
+
+                    elif order_side == 'sell':
+                        fcoin.sell(trading_sym, highest_bid, order_amount)
+
                     waiting = False
-                    break
 
             trade_ctr += 1
             print("trade times: %d" % trade_ctr)
