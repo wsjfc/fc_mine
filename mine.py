@@ -136,11 +136,9 @@ def mining(fcoin):
 
             trading_amont = "{0:.4f}".format(trading_amont)
             trading_amont = float(trading_amont)
-            if trading_amont > 0.01:
+            #input("Press Enter to continue...")
+            if trading_amont > 0.5:
                 print("sell&buy...")
-                #fcoin.sell(trading_sym, str(trade_price), trading_amont)
-                #fcoin.buy(trading_sym, str(trade_price), trading_amont)
-
                 def sell_(params):
                     trading_sym, trade_price, trading_amont = params
                     print('sell at %s' % time.time())
