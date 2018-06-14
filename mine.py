@@ -145,21 +145,23 @@ def mining(fcoin):
                     trading_sym, trade_price, trading_amont = params
                     print('sell at %s' % time.time())
                     status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
-                    while status['status'] != 0:
-                        time.sleep(2)
-                        status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
-                        if status == None:
-                            status = {'status':-1}
+                    if status != None:
+                        while status['status'] != 0:
+                            time.sleep(2)
+                            status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                            if status == None:
+                                status = {'status':-1}
 
                 def buy_(params):
                     trading_sym, trade_price, trading_amont = params
                     print('buy  at %s' % time.time())
                     status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
-                    while status['status'] != 0:
-                        time.sleep(2)
-                        status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
-                        if status == None:
-                            status = {'status':-1}
+                    if status != None:
+                        while status['status'] != 0:
+                            time.sleep(2)
+                            status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                            if status == None:
+                                status = {'status':-1}
 
                 async def buyNsell():
                     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -198,7 +200,7 @@ def mining(fcoin):
                     wait_ctr += 1
                     time.sleep(1)
 
-                if wait_ctr > 3:
+                if wait_ctr > 1:
                     order_amount = orders['data'][0]['amount']
                     order_price = orders['data'][0]['amount']
                     order_side = orders['data'][0]['side']
@@ -223,19 +225,21 @@ def mining(fcoin):
                                 order_amount = "{0:.2f}".format(float(order_amount))
                                 order_amount = float(order_amount)
                             status = fcoin.buy(trading_sym, lowest_ask, order_amount)
-                            while status['status'] != 0:
-                                time.sleep(2)
-                                status = fcoin.buy(trading_sym, lowest_ask, order_amount)
-                                if status == None:
-                                    status = {'status':-1}
+                            if status != None:
+                                while status['status'] != 0:
+                                    time.sleep(2)
+                                    status = fcoin.buy(trading_sym, lowest_ask, order_amount)
+                                    if status == None:
+                                        status = {'status':-1}
 
                         elif order_side == 'sell':
                             status = fcoin.sell(trading_sym, highest_bid, order_amount)
-                            while status['status'] != 0:
-                                time.sleep(2)
-                                status = fcoin.sell(trading_sym, highest_bid, order_amount)
-                                if status == None:
-                                    status = {'status':-1}
+                            if status != None:
+                                while status['status'] != 0:
+                                    time.sleep(2)
+                                    status = fcoin.sell(trading_sym, highest_bid, order_amount)
+                                    if status == None:
+                                        status = {'status':-1}
 
                     waiting = False
 
