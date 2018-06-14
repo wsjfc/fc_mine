@@ -7,6 +7,11 @@ import argparse
 import concurrent.futures
 import asyncio
 import time
+import inspect
+
+def lineno():
+    """Returns the current line number in our program."""
+    return inspect.currentframe().f_back.f_lineno
 
 def check(fcoin):
     symbols = fcoin.get_symbols()
@@ -225,19 +230,25 @@ def mining(fcoin):
                                 order_amount = "{0:.2f}".format(float(order_amount))
                                 order_amount = float(order_amount)
                             status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
+                            print(status + lineno())
                             if status != None:
                                 while status['status'] != 0:
                                     time.sleep(2)
                                     status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
+                                    print(status + lineno())
                                     if status == None:
                                         status = {'status':-1}
+                                    elif status['status'] == 1002:
+                                        time.sleep(10)
 
                         elif order_side == 'sell':
                             status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
+                            print(status + lineno())
                             if status != None:
                                 while status['status'] != 0:
                                     time.sleep(2)
                                     status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
+                                    print(status + lineno())
                                     if status == None:
                                         status = {'status':-1}
                         time.sleep(2)
