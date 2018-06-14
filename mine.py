@@ -96,7 +96,7 @@ def mining(fcoin):
     print("initial balance ft: %f" % omg_balance)
     print("initial balance usdt: %f" % eth_balance)
 
-    trading_amont = 0.01
+    trading_amont = 1
     prev_trading_amount = trading_amont
     trade_ctr = 0
     while omg_balance > 0 and eth_balance > 0:
@@ -143,7 +143,7 @@ def mining(fcoin):
                 print("sell&buy...")
                 def sell_(params):
                     trading_sym, trade_price, trading_amont = params
-                    print('sell at %s' % time.time())
+                    #print('sell at %s' % time.time())
                     status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
                     if status != None:
                         while status['status'] != 0:
@@ -154,7 +154,7 @@ def mining(fcoin):
 
                 def buy_(params):
                     trading_sym, trade_price, trading_amont = params
-                    print('buy  at %s' % time.time())
+                    #print('buy  at %s' % time.time())
                     status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
                     if status != None:
                         while status['status'] != 0:
@@ -213,7 +213,7 @@ def mining(fcoin):
 
                     cancel_status = fcoin.cancel_order(orders['data'][0]['id'])
                     print("cancel order result: %s" % cancel_status)
-                    if cancel_status['status'] == 0:
+                    if cancel_status != None and cancel_status['status'] == 0:
                         if order_side == 'buy':
                             usdt_balance = 0
                             balances = fcoin.get_balance()
