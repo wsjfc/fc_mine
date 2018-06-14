@@ -146,14 +146,20 @@ def mining(fcoin):
                     print('sell at %s' % time.time())
                     status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
                     while status['status'] != 0:
-                        fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                        time.sleep(2)
+                        status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                        if status == None:
+                            status = {'status':-1}
 
                 def buy_(params):
                     trading_sym, trade_price, trading_amont = params
                     print('buy  at %s' % time.time())
                     status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
                     while status['status'] != 0:
-                        fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                        time.sleep(2)
+                        status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                        if status == None:
+                            status = {'status':-1}
 
                 async def buyNsell():
                     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -218,12 +224,18 @@ def mining(fcoin):
                                 order_amount = float(order_amount)
                             status = fcoin.buy(trading_sym, lowest_ask, order_amount)
                             while status['status'] != 0:
+                                time.sleep(2)
                                 status = fcoin.buy(trading_sym, lowest_ask, order_amount)
+                                if status == None:
+                                    status = {'status':-1}
 
                         elif order_side == 'sell':
                             status = fcoin.sell(trading_sym, highest_bid, order_amount)
                             while status['status'] != 0:
+                                time.sleep(2)
                                 status = fcoin.sell(trading_sym, highest_bid, order_amount)
+                                if status == None:
+                                    status = {'status':-1}
 
                     waiting = False
 
