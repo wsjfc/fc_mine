@@ -231,26 +231,28 @@ def mining(fcoin):
                                 order_amount = float(order_amount)
                             status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                             print(str(status) + str(lineno()))
-                            if status != None:
-                                while status['status'] != 0:
-                                    time.sleep(2)
-                                    status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
-                                    print(str(status) + str(lineno()))
-                                    if status == None:
-                                        status = {'status':-1}
-                                    elif status['status'] == 1002:
-                                        time.sleep(10)
+                            if status == None:
+                                status = {'status':-1}
+                            while status['status'] != 0:
+                                time.sleep(2)
+                                status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
+                                print(str(status) + str(lineno()))
+                                if status == None:
+                                    status = {'status':-1}
+                                elif status['status'] == 1002:
+                                    time.sleep(10)
 
                         elif order_side == 'sell':
                             status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
                             print(str(status) + str(lineno()))
-                            if status != None:
-                                while status['status'] != 0:
-                                    time.sleep(2)
-                                    status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
-                                    print(str(status) + str(lineno()))
-                                    if status == None:
-                                        status = {'status':-1}
+                            if status == None:
+                                status = {'status':-1}
+                            while status['status'] != 0:
+                                time.sleep(2)
+                                status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
+                                print(str(status) + ' ' + str(lineno()))
+                                if status == None:
+                                    status = {'status':-1}
                         time.sleep(2)
                     waiting = False
 
