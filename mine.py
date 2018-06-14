@@ -205,7 +205,7 @@ def mining(fcoin):
                     wait_ctr += 1
                     time.sleep(1)
 
-                if wait_ctr > 1:
+                if wait_ctr > 3:
                     order_amount = orders['data'][0]['amount']
                     order_price = orders['data'][0]['amount']
                     order_side = orders['data'][0]['side']
