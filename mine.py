@@ -101,7 +101,7 @@ def mining(fcoin):
     trade_ctr = 0
     while omg_balance > 0 and eth_balance > 0:
     #while True:
-        print("####### start trading session########")
+        print("------- start trading session -------")
         trading_sym = 'ftusdt'
 
         ret = fcoin.get_market_depth('L20', trading_sym)
@@ -240,7 +240,7 @@ def mining(fcoin):
                                     status = fcoin.sell(trading_sym, highest_bid, order_amount)
                                     if status == None:
                                         status = {'status':-1}
-
+                        time.sleep(2)
                     waiting = False
 
             prev_trading_amount = trading_amont
