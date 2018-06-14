@@ -224,20 +224,20 @@ def mining(fcoin):
                                 order_amount = 0.99 * usdt_balance/lowest_ask
                                 order_amount = "{0:.2f}".format(float(order_amount))
                                 order_amount = float(order_amount)
-                            status = fcoin.buy(trading_sym, lowest_ask, order_amount)
+                            status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                             if status != None:
                                 while status['status'] != 0:
                                     time.sleep(2)
-                                    status = fcoin.buy(trading_sym, lowest_ask, order_amount)
+                                    status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                                     if status == None:
                                         status = {'status':-1}
 
                         elif order_side == 'sell':
-                            status = fcoin.sell(trading_sym, highest_bid, order_amount)
+                            status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
                             if status != None:
                                 while status['status'] != 0:
                                     time.sleep(2)
-                                    status = fcoin.sell(trading_sym, highest_bid, order_amount)
+                                    status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
                                     if status == None:
                                         status = {'status':-1}
                         time.sleep(2)

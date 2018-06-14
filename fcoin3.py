@@ -138,12 +138,12 @@ class Fcoin():
 
     def buy(self,symbol, price, amount):
         """buy someting"""
-        print('buy  %f %s at %f' % (amount, symbol, price))
+        print('buy  %f %s at %s' % (amount, symbol, price))
         return self.create_order(symbol=symbol, side='buy', type='limit', price=str(price), amount=amount)
 
     def sell(self, symbol, price, amount):
         """buy someting"""
-        print('sell %f %s at %f' % (amount, symbol, price))
+        print('sell %f %s at %s' % (amount, symbol, price))
         return self.create_order(symbol=symbol, side='sell', type='limit', price=str(price), amount=amount)
 
     def get_order(self,order_id):
