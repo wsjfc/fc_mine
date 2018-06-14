@@ -125,7 +125,7 @@ def mining(fcoin):
 
             lowest_ask = ret['data']['asks'][0]
             highest_bid = ret['data']['bids'][0]
-            print('lowest ask: %f, highest bid: %f.'
+            print('lowest ask: %.8f, highest bid: %.8f.'
                   % (lowest_ask, highest_bid))
             trade_price = ((lowest_ask + highest_bid)/2)
             print('trading price:%f' % trade_price)
