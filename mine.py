@@ -119,6 +119,9 @@ def mining(fcoin):
         print("------- start trading session -------")
 
         ret = fcoin.get_market_depth('L20', trading_sym)
+        if ret == None:
+            continue
+
         if ret['status'] == 0 and \
                 len(ret['data']['bids']) and \
                 len(ret['data']['asks']) > 0:
