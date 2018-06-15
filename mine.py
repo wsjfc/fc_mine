@@ -244,15 +244,12 @@ def mining(fcoin):
                         lowest_ask = ret['data']['asks'][0]
                         highest_bid = ret['data']['bids'][0]
 
-                        #orders_submitted = fcoin.list_orders(symbol='ftusdt', states='submitted')
-                        #orders_partial_canceled = fcoin.list_orders(symbol='ftusdt', states='partial_canceled')
-                        #orders_partial_filled = fcoin.list_orders(symbol='ftusdt', states='partial_filled')
                         orders_submitted = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
-                        orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled')
-                        orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled')
-                        orders_data = orders_submitted['data'] + \
-                                      orders_partial_canceled['data'] + \
-                                      orders_partial_filled['data']
+                        #orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled')
+                        #orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled')
+                        orders_data = orders_submitted['data']
+                                      #orders_partial_canceled['data'] + \
+                                      #orders_partial_filled['data']
                         for order in orders_data:
                             cancel_status = fcoin.cancel_order(order['id'])
                             canceled = False
@@ -265,13 +262,11 @@ def mining(fcoin):
                                         print(status)
                                         detail_status = status['data']['state']
                                         if detail_status == "canceled" or \
-                                                        detail_status == "filled" or \
-                                                        detail_status == "partial_canceled" or \
-                                                        detail_status == "partial_filled":
+                                                        detail_status == "filled":
                                             print("cancel order result: %s" % detail_status)
                                             canceled = True
                                         else:
-                                            print('not canceled yet.')
+                                            print('not canceled yet: %s.'% detail_status)
                                             time.sleep(3)
                                     else:
                                         time.sleep(2)
