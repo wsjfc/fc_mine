@@ -206,7 +206,6 @@ def mining(fcoin):
                 loop.run_until_complete(buyNsell())
             else:
                 print("trading_amont should above 5.")
-            print("-------- end --------")
 
             # check orders status
             waiting = True
@@ -230,7 +229,15 @@ def mining(fcoin):
                     orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
                     for order in orders['data']:
                         cancel_status = fcoin.cancel_order(order['id'])
-                        print("cancel order result: %s" % cancel_status)
+                        canceled = False
+                        while not canceled:
+                            status = fcoin.get_order(order_id=order['id'])
+                            if status['data']['state'] == "canceled":
+                                print("cancel order result: %s" % cancel_status)
+                                canceled = True
+                            else:
+                                print('not canceled yet.')
+                                time.sleep(3)
 
                         order_amount = order['amount']
                         order_price = order['amount']
@@ -301,6 +308,8 @@ def mining(fcoin):
                 diff_amount = buy_amount if buy_amount < sell_amount else sell_amount
                 trading_loss += (buy_price - sell_price) * diff_amount
                 print("trading loss: %f" % trading_loss)
+
+            print("-------- end --------")
 
     omg_balance, eth_balance = get_balance(fcoin=fcoin)
     print("final balance ft: %f" % omg_balance)
