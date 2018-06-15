@@ -234,8 +234,13 @@ def mining(fcoin):
                         lowest_ask = ret['data']['asks'][0]
                         highest_bid = ret['data']['bids'][0]
 
-                        orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
-                        for order in orders['data']:
+                        orders_submitted = fcoin.list_orders(symbol='ftusdt', states='submitted')
+                        orders_partial_canceled = fcoin.list_orders(symbol='ftusdt', states='partial_canceled')
+                        orders_partial_filled = fcoin.list_orders(symbol='ftusdt', states='partial_filled')
+                        orders_data = orders_submitted['data'] + \
+                                      orders_partial_canceled['data'] + \
+                                      orders_partial_filled['data']
+                        for order in orders_data:
                             cancel_status = fcoin.cancel_order(order['id'])
                             canceled = False
                             detail_status = ""
@@ -243,7 +248,10 @@ def mining(fcoin):
                                 status = fcoin.get_order(order_id=order['id'])
                                 print(status)
                                 detail_status = status['data']['state']
-                                if detail_status == "canceled" or detail_status == "filled":
+                                if detail_status == "canceled" or \
+                                                detail_status == "filled" or \
+                                                detail_status == "partial_canceled" or \
+                                                detail_status == "partial_filled":
                                     print("cancel order result: %s" % detail_status)
                                     canceled = True
                                 else:
@@ -321,8 +329,7 @@ def mining(fcoin):
                 if len(trade_dict) > 0:
                     buy_price, buy_amount = trade_dict['buy']
                     sell_price, sell_amount = trade_dict['sell']
-                    diff_amount = buy_amount if buy_amount < sell_amount else sell_amount
-                    trading_loss += (buy_price - sell_price) * diff_amount
+                    trading_loss += buy_price*buy_amount - sell_price*sell_amount
                     print("trading loss: %f" % trading_loss)
             else:
                 print("trading_amont should above 5.")
