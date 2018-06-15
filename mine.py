@@ -245,18 +245,23 @@ def mining(fcoin):
                             canceled = False
                             detail_status = ""
                             while not canceled:
-                                status = fcoin.get_order(order_id=order['id'])
-                                print(status)
-                                detail_status = status['data']['state']
-                                if detail_status == "canceled" or \
-                                                detail_status == "filled" or \
-                                                detail_status == "partial_canceled" or \
-                                                detail_status == "partial_filled":
-                                    print("cancel order result: %s" % detail_status)
-                                    canceled = True
-                                else:
-                                    print('not canceled yet.')
-                                    time.sleep(3)
+                                status = None
+                                while status == None:
+                                    status = fcoin.get_order(order_id=order['id'])
+                                    if status != None:
+                                        print(status)
+                                        detail_status = status['data']['state']
+                                        if detail_status == "canceled" or \
+                                                        detail_status == "filled" or \
+                                                        detail_status == "partial_canceled" or \
+                                                        detail_status == "partial_filled":
+                                            print("cancel order result: %s" % detail_status)
+                                            canceled = True
+                                        else:
+                                            print('not canceled yet.')
+                                            time.sleep(3)
+                                    else:
+                                        time.sleep(2)
                             if detail_status == "canceled":
                                 order_amount = order['amount']
                                 order_price = order['amount']
