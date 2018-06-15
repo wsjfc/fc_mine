@@ -100,14 +100,23 @@ def mining(fcoin):
     omg_balance, eth_balance = get_balance(fcoin=fcoin)
     print("initial balance ft: %f" % omg_balance)
     print("initial balance usdt: %f" % eth_balance)
+    input("Press Enter to continue...")
+
+    trading_sym = 'ftusdt'
+    ret = fcoin.get_market_depth('L20', trading_sym)
+    lowest_ask = ret['data']['asks'][0]
+    highest_bid = ret['data']['bids'][0]
+    initial_price = ((lowest_ask + highest_bid) / 2)
+
+    total_assets = initial_price * omg_balance + eth_balance
 
     trading_amont = 1
     prev_trading_amount = trading_amont
     trade_ctr = 0
+    trading_loss = 0
+    trade_dict = {}
     while omg_balance > 0 and eth_balance > 0:
-    #while True:
         print("------- start trading session -------")
-        trading_sym = 'ftusdt'
 
         ret = fcoin.get_market_depth('L20', trading_sym)
         if ret['status'] == 0 and \
@@ -143,30 +152,34 @@ def mining(fcoin):
             trading_amont = "{0:.2f}".format(trading_amont)
             trading_amont = float(trading_amont)
             print('trading amount: ###--- %f ---### %f' % (trading_amont, trading_amont/prev_trading_amount))
-            #input("Press Enter to continue...")
+            cumulative_exchange = 0
             if trading_amont > 5:
                 print("sell&buy...")
                 def sell_(params):
                     trading_sym, trade_price, trading_amont = params
-                    #print('sell at %s' % time.time())
                     status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                    print('sell status' + str(status))
                     if status != None:
                         while status['status'] != 0:
                             time.sleep(2)
                             status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
                             if status == None:
                                 status = {'status':-1}
+                        #cumulative_exchange += trade_price * trading_amont
+                    trade_dict['sell'] = (trade_price, trading_amont)
 
                 def buy_(params):
                     trading_sym, trade_price, trading_amont = params
-                    #print('buy  at %s' % time.time())
                     status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                    print('buy  status' + str(status))
                     if status != None:
                         while status['status'] != 0:
                             time.sleep(2)
                             status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
                             if status == None:
                                 status = {'status':-1}
+                        #cumulative_exchange += trade_price * trading_amont
+                    trade_dict['buy'] = (trade_price, trading_amont)
 
                 async def buyNsell():
                     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -206,59 +219,85 @@ def mining(fcoin):
                     time.sleep(1)
 
                 if wait_ctr > 3:
-                    order_amount = orders['data'][0]['amount']
-                    order_price = orders['data'][0]['amount']
-                    order_side = orders['data'][0]['side']
-                    order_amount = "{0:.2f}".format(float(order_amount))
-                    order_amount = float(order_amount)
                     ret = fcoin.get_market_depth('L20', trading_sym)
 
                     lowest_ask = ret['data']['asks'][0]
                     highest_bid = ret['data']['bids'][0]
 
-                    cancel_status = fcoin.cancel_order(orders['data'][0]['id'])
-                    print("cancel order result: %s" % cancel_status)
-                    if cancel_status != None and cancel_status['status'] == 0:
-                        if order_side == 'buy':
-                            usdt_balance = 0
-                            balances = fcoin.get_balance()
-                            for bl in balances['data']:
-                                if bl['currency'] == 'usdt':
-                                    usdt_balance = float(bl['available'])
-                            if usdt_balance < lowest_ask * order_amount:
-                                order_amount = 0.99 * usdt_balance/lowest_ask
-                                order_amount = "{0:.2f}".format(float(order_amount))
-                                order_amount = float(order_amount)
-                            status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
-                            print(str(status) + str(lineno()))
-                            if status == None:
-                                status = {'status':-1}
-                            while status['status'] != 0:
-                                time.sleep(2)
+                    orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
+                    for order in orders['data']:
+                        cancel_status = fcoin.cancel_order(order['id'])
+                        print("cancel order result: %s" % cancel_status)
+
+                        order_amount = order['amount']
+                        order_price = order['amount']
+                        order_side = order['side']
+                        order_amount = "{0:.2f}".format(float(order_amount))
+                        order_amount = float(order_amount)
+
+                        if cancel_status != None and cancel_status['status'] == 0:
+                            if order_side == 'buy':
+                                canceld_order_price, canceld_order_amount = trade_dict['buy']
+                                cumulative_exchange -= canceld_order_price * canceld_order_amount
+                                usdt_balance = 0
+                                balances = fcoin.get_balance()
+                                for bl in balances['data']:
+                                    if bl['currency'] == 'usdt':
+                                        usdt_balance = float(bl['available'])
+                                if usdt_balance < lowest_ask * order_amount:
+                                    order_amount = 0.99 * usdt_balance/lowest_ask
+                                    order_amount = "{0:.2f}".format(float(order_amount))
+                                    order_amount = float(order_amount)
                                 status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                                 print(str(status) + str(lineno()))
                                 if status == None:
                                     status = {'status':-1}
-                                elif status['status'] == 1002:
-                                    time.sleep(10)
+                                elif status['status'] == 0:
+                                    cumulative_exchange += lowest_ask * order_amount
+                                    trade_dict['buy'] = (lowest_ask, order_amount)
+                                while status['status'] != 0:
+                                    time.sleep(2)
+                                    status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
+                                    print(str(status) + str(lineno()))
+                                    if status == None:
+                                        status = {'status':-1}
+                                    elif status['status'] == 1002:
+                                        time.sleep(10)
+                                    elif status['status'] == 0:
+                                        cumulative_exchange += lowest_ask * order_amount
+                                        trade_dict['buy'] = (lowest_ask, order_amount)
 
-                        elif order_side == 'sell':
-                            status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
-                            print(str(status) + str(lineno()))
-                            if status == None:
-                                status = {'status':-1}
-                            while status['status'] != 0:
-                                time.sleep(2)
+                            elif order_side == 'sell':
+                                canceld_order_price, canceld_order_amount = trade_dict['sell']
+                                cumulative_exchange -= canceld_order_price * canceld_order_amount
                                 status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
-                                print(str(status) + ' ' + str(lineno()))
+                                print(str(status) + str(lineno()))
                                 if status == None:
                                     status = {'status':-1}
-                        time.sleep(2)
+                                elif status['status'] == 0:
+                                    cumulative_exchange += highest_bid * order_amount
+                                    trade_dict['buy'] = (highest_bid, order_amount)
+                                while status['status'] != 0:
+                                    time.sleep(2)
+                                    status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
+                                    print(str(status) + ' ' + str(lineno()))
+                                    if status == None:
+                                        status = {'status':-1}
+                                    elif status['status'] == 0:
+                                        cumulative_exchange += lowest_ask * order_amount
+                                        trade_dict['buy'] = (lowest_ask, order_amount)
+                            time.sleep(2)
                     waiting = False
 
             prev_trading_amount = trading_amont
             trade_ctr += 1
             print("trade times: %d" % trade_ctr)
+            if len(trade_dict) > 0:
+                buy_price, buy_amount = trade_dict['buy']
+                sell_price, sell_amount = trade_dict['sell']
+                diff_amount = buy_amount if buy_amount < sell_amount else sell_amount
+                trading_loss += (buy_price - sell_price) * diff_amount
+                print("trading loss: %f" % trading_loss)
 
     omg_balance, eth_balance = get_balance(fcoin=fcoin)
     print("final balance ft: %f" % omg_balance)
@@ -272,20 +311,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     fcoin = Fcoin()
-    api_key = os.environ["FCOIN_API_KEY"]
-    api_sec = os.environ["FCOIN_API_SECRET"]
+    api_key = os.environ["FCOIN_API_KEY_0"]
+    api_sec = os.environ["FCOIN_API_SECRET_0"]
     fcoin.auth(api_key, api_sec)
 
     MODE = args.mode
     if MODE == 'check':
         check(fcoin=fcoin)
     elif MODE == 'mine':
-        #eth_trades = ['fteth', 'zileth', 'icxeth', 'zipeth', 'omgeth']
         mining(fcoin=fcoin)
     elif MODE == 'test':
-        while True:
-            ret = fcoin.get_market_depth('L20', 'omgeth')
-            lowest_ask = ret['data']['asks'][0]
-            highest_bid = ret['data']['bids'][0]
-            print('lowest ask: %f, highest bid: %f.'
-                  % (lowest_ask, highest_bid))
+        status = fcoin.sell('ftusdt', str(1.3), 10)
+        print(status)
