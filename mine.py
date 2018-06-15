@@ -83,6 +83,15 @@ def mine_(trades, fcoin):
 
     return
 
+def fcoin_get_order(fcoin, sym, state):
+    orders = None
+    while orders == None:
+        orders = fcoin.list_orders(symbol=sym, states=state)
+        if orders != None:
+            return orders
+        else:
+            time.sleep(2)
+
 def get_balance(fcoin):
     omg_balance = 0
     eth_balance = 0
@@ -220,7 +229,8 @@ def mining(fcoin):
                 wait_ctr = 0
                 while waiting:
                     time.sleep(3)
-                    orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
+                    #orders = fcoin.list_orders(symbol='ftusdt', states='submitted')
+                    orders = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
                     print(orders)
                     if len(orders['data']) == 0:
                         waiting = False
@@ -234,9 +244,12 @@ def mining(fcoin):
                         lowest_ask = ret['data']['asks'][0]
                         highest_bid = ret['data']['bids'][0]
 
-                        orders_submitted = fcoin.list_orders(symbol='ftusdt', states='submitted')
-                        orders_partial_canceled = fcoin.list_orders(symbol='ftusdt', states='partial_canceled')
-                        orders_partial_filled = fcoin.list_orders(symbol='ftusdt', states='partial_filled')
+                        #orders_submitted = fcoin.list_orders(symbol='ftusdt', states='submitted')
+                        #orders_partial_canceled = fcoin.list_orders(symbol='ftusdt', states='partial_canceled')
+                        #orders_partial_filled = fcoin.list_orders(symbol='ftusdt', states='partial_filled')
+                        orders_submitted = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
+                        orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled')
+                        orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled')
                         orders_data = orders_submitted['data'] + \
                                       orders_partial_canceled['data'] + \
                                       orders_partial_filled['data']
