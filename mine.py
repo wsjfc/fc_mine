@@ -86,12 +86,17 @@ def mine_(trades, fcoin):
 def get_balance(fcoin):
     omg_balance = 0
     eth_balance = 0
-    balances = fcoin.get_balance()
-    for bl in balances['data']:
-        if bl['currency'] == 'ft':
-            omg_balance = float(bl['available'])
-        elif bl['currency'] == 'usdt':
-            eth_balance = float(bl['available'])
+    balances = None
+    while balances == None:
+        balances = fcoin.get_balance()
+        if balances != None:
+            for bl in balances['data']:
+                if bl['currency'] == 'ft':
+                    omg_balance = float(bl['available'])
+                elif bl['currency'] == 'usdt':
+                    eth_balance = float(bl['available'])
+        else:
+            time.sleep(2)
 
     return omg_balance, eth_balance
 
@@ -128,12 +133,17 @@ def mining(fcoin):
             # get eth amount
             omg_balance = 0
             eth_balance = 0
-            balances = fcoin.get_balance()
-            for bl in balances['data']:
-                if bl['currency'] == 'ft':
-                    omg_balance = float(bl['available'])
-                elif bl['currency'] == 'usdt':
-                    eth_balance = float(bl['available'])
+            balances = None
+            while balances == None:
+                balances = fcoin.get_balance()
+                if balances != None:
+                    for bl in balances['data']:
+                        if bl['currency'] == 'ft':
+                            omg_balance = float(bl['available'])
+                        elif bl['currency'] == 'usdt':
+                            eth_balance = float(bl['available'])
+                else:
+                    time.sleep(2)
 
             lowest_ask = ret['data']['asks'][0]
             highest_bid = ret['data']['bids'][0]
@@ -251,10 +261,15 @@ def mining(fcoin):
                                         canceld_order_price, canceld_order_amount = trade_dict['buy']
                                         cumulative_exchange -= canceld_order_price * canceld_order_amount
                                         usdt_balance = 0
-                                        balances = fcoin.get_balance()
-                                        for bl in balances['data']:
-                                            if bl['currency'] == 'usdt':
-                                                usdt_balance = float(bl['available'])
+                                        balances = None
+                                        while balances == None:
+                                            balances = fcoin.get_balance()
+                                            if balances != None:
+                                                for bl in balances['data']:
+                                                    if bl['currency'] == 'usdt':
+                                                        usdt_balance = float(bl['available'])
+                                            else:
+                                                time.sleep(2)
                                         if usdt_balance < lowest_ask * order_amount:
                                             order_amount = 0.99 * usdt_balance / lowest_ask
                                             order_amount = "{0:.2f}".format(float(order_amount))
