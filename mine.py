@@ -347,7 +347,9 @@ def mining(fcoin):
                 if len(trade_dict) > 0:
                     buy_price, buy_amount = trade_dict['buy']
                     sell_price, sell_amount = trade_dict['sell']
-                    trading_loss += buy_price*buy_amount - sell_price*sell_amount
+                    diff_amount = buy_amount if buy_amount < sell_amount else sell_amount
+                    trading_loss += (buy_price - sell_price) * diff_amount
+
                     print("trading loss: %f" % trading_loss)
             else:
                 print("trading_amont should above 5.")
