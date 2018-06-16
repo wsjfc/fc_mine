@@ -111,7 +111,7 @@ def get_balance(fcoin, target_cur, base_cur):
 
     return omg_balance, eth_balance
 
-def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
+def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug=False):
     # get initial balance
     omg_balance, eth_balance = get_balance(fcoin, target_cur, base_cur)
     print("initial balance %s: %f" % (target_cur, omg_balance))
@@ -231,6 +231,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                 # check orders status
                 waiting = True
                 wait_ctr = 0
+                if debug:
+                    input('Press Enter to check order status.')
                 while waiting:
                     time.sleep(3)
                     orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
@@ -253,6 +255,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                         orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
                         orders_data = orders_submitted['data'] + orders_partial_filled['data']
                         for order in orders_data:
+                            if debug:
+                                input('Press Enter to cancel order.')
                             cancel_status = fcoin.cancel_order(order['id'])
                             canceled = False
                             detail_status = ""
@@ -274,6 +278,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                     else:
                                         time.sleep(1)
                             if detail_status == "canceled" or detail_status == "partial_canceled":
+                                if debug:
+                                    input('Press Enter to replace the order.')
                                 if detail_status == "canceled":
                                     order_amount_total = order['amount']
                                     order_amount_executed = order['filled_amount']
@@ -376,7 +382,9 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", default='check',  help="model type: check; mine")
-    parser.add_argument("--cur", default='ft_usdt',  help="currency type: ft_usdt, etc_usdt ...")
+    parser.add_argument("--cur", default='ft_usdt',  help="currency type: ft_usdt, etc_usdt, omg_eth ...")
+    parser.add_argument("--debug", default=False, action='store_true')
+
     args = parser.parse_args()
 
     fcoin = Fcoin()
@@ -386,18 +394,21 @@ if __name__ == "__main__":
 
     precision_dict = {
         'ft_usdt': (6, 2),
-        'etc_usdt': (2, 4)
+        'etc_usdt': (2, 4),
+        'omg_eth' : (6, 4),
+        'ft_eth' : (8, 2)
     }
 
     MODE = args.mode
     sym_pair = args.cur
+    DEBUG = args.debug
     target_currency = sym_pair.split('_')[0]
     base_currency = sym_pair.split('_')[1]
     if MODE == 'check':
         check(fcoin=fcoin)
     elif MODE == 'mine':
         price_precision, amount_precision = precision_dict[sym_pair]
-        mining(fcoin, target_currency, base_currency, price_precision, amount_precision)
+        mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG)
     elif MODE == 'test':
         status = fcoin.sell('ftusdt', str(1.3), 10)
         print(status)
