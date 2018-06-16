@@ -272,9 +272,9 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             canceled = True
                                         else:
                                             print('not canceled yet: %s.'% detail_status)
-                                            time.sleep(api_access_interval)
+                                            time.sleep(1)
                                     else:
-                                        time.sleep(api_access_interval)
+                                        time.sleep(1)
                             if detail_status == "canceled" or detail_status == "partial_canceled":
                                 if detail_status == "canceled":
                                     order_amount = order['amount']
