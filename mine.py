@@ -9,6 +9,8 @@ import asyncio
 import time
 import inspect
 
+api_access_interval = 0.01
+
 def lineno():
     """Returns the current line number in our program."""
     return inspect.currentframe().f_back.f_lineno
@@ -90,7 +92,7 @@ def fcoin_get_order(fcoin, sym, state):
         if orders != None:
             return orders
         else:
-            time.sleep(2)
+            time.sleep(api_access_interval)
 
 def get_balance(fcoin, target_cur, base_cur):
     omg_balance = 0
@@ -105,7 +107,7 @@ def get_balance(fcoin, target_cur, base_cur):
                 elif bl['currency'] == base_cur:
                     eth_balance = float(bl['available'])
         else:
-            time.sleep(2)
+            time.sleep(api_access_interval)
 
     return omg_balance, eth_balance
 
@@ -152,7 +154,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                         elif bl['currency'] == base_cur:
                             eth_balance = float(bl['available'])
                 else:
-                    time.sleep(2)
+                    time.sleep(api_access_interval)
 
             lowest_ask = ret['data']['asks'][0]
             highest_bid = ret['data']['bids'][0]
@@ -183,7 +185,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                     print('sell status' + str(status))
                     if status != None:
                         while status['status'] != 0:
-                            time.sleep(2)
+                            time.sleep(api_access_interval)
                             status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
                             if status == None:
                                 status = {'status':-1}
@@ -196,7 +198,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                     print('buy  status' + str(status))
                     if status != None:
                         while status['status'] != 0:
-                            time.sleep(2)
+                            time.sleep(api_access_interval)
                             status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
                             if status == None:
                                 status = {'status':-1}
@@ -268,9 +270,9 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             canceled = True
                                         else:
                                             print('not canceled yet: %s.'% detail_status)
-                                            time.sleep(3)
+                                            time.sleep(api_access_interval)
                                     else:
-                                        time.sleep(2)
+                                        time.sleep(api_access_interval)
                             if detail_status == "canceled" or detail_status == "partial_canceled":
                                 if detail_status == "canceled":
                                     order_amount = order['amount']
@@ -301,7 +303,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                                     if bl['currency'] == 'usdt':
                                                         usdt_balance = float(bl['available'])
                                             else:
-                                                time.sleep(2)
+                                                time.sleep(api_access_interval)
                                         if usdt_balance < lowest_ask * order_amount:
                                             order_amount = 0.99 * usdt_balance / lowest_ask
                                             order_amount = (("{0:.%df}" % amount_precision).format(order_amount))
@@ -314,13 +316,13 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             cumulative_exchange += lowest_ask * order_amount
                                             trade_dict['buy'] = (lowest_ask, order_amount)
                                         while status['status'] != 0:
-                                            time.sleep(2)
+                                            time.sleep(api_access_interval)
                                             status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                                             print(str(status) + str(lineno()))
                                             if status == None:
                                                 status = {'status': -1}
                                             elif status['status'] == 1002:
-                                                time.sleep(10)
+                                                time.sleep(api_access_interval)
                                             elif status['status'] == 0:
                                                 cumulative_exchange += lowest_ask * order_amount
                                                 trade_dict['buy'] = (lowest_ask, order_amount)
@@ -336,7 +338,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             cumulative_exchange += highest_bid * order_amount
                                             trade_dict['buy'] = (highest_bid, order_amount)
                                         while status['status'] != 0:
-                                            time.sleep(2)
+                                            time.sleep(api_access_interval)
                                             status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
                                             print(str(status) + ' ' + str(lineno()))
                                             if status == None:
@@ -344,10 +346,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             elif status['status'] == 0:
                                                 cumulative_exchange += lowest_ask * order_amount
                                                 trade_dict['buy'] = (lowest_ask, order_amount)
-                                    time.sleep(2)
+                                    time.sleep(api_access_interval)
                                     wait_ctr = 0
-
-                    #waiting = False
 
                 prev_trading_amount = trading_amont
                 trade_ctr += 1
