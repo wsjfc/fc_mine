@@ -234,10 +234,11 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                 wait_ctr = 0
                 while waiting:
                     time.sleep(3)
-                    #orders = fcoin.list_orders(symbol=trading_sym, states='submitted')
-                    orders = fcoin_get_order(fcoin, trading_sym, 'submitted')
-                    print(orders)
-                    if len(orders['data']) == 0:
+                    orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
+                    orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
+                    orders_data = orders_submitted['data'] + orders_partial_filled['data']
+                    print(orders_data)
+                    if len(orders_data) == 0:
                         waiting = False
                     else:
                         wait_ctr += 1
@@ -250,11 +251,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                         highest_bid = ret['data']['bids'][0]
 
                         orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
-                        #orders_partial_canceled = fcoin_get_order(fcoin, trading_sym, 'partial_canceled')
-                        #orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
-                        orders_data = orders_submitted['data']
-                                      #orders_partial_canceled['data'] + \
-                                      #orders_partial_filled['data']
+                        orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
+                        orders_data = orders_submitted['data'] + orders_partial_filled['data']
                         for order in orders_data:
                             cancel_status = fcoin.cancel_order(order['id'])
                             canceled = False
@@ -272,13 +270,15 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             print("cancel order result: %s" % detail_status)
                                             canceled = True
                                         else:
-                                            print('not canceled yet: %s.'% detail_status)
+                                            print('not canceled yet: %s.' % detail_status)
                                             time.sleep(1)
                                     else:
                                         time.sleep(1)
                             if detail_status == "canceled" or detail_status == "partial_canceled":
                                 if detail_status == "canceled":
-                                    order_amount = order['amount']
+                                    order_amount_total = order['amount']
+                                    order_amount_executed = order['filled_amount']
+                                    order_amount = float(order_amount_total) - float(order_amount_executed)
                                     order_price = order['amount']
                                     order_side = order['side']
                                     order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
