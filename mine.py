@@ -364,8 +364,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     fcoin = Fcoin()
-    api_key = os.environ["FCOIN_API_KEY_1"]
-    api_sec = os.environ["FCOIN_API_SECRET_1"]
+    api_key = os.environ["FCOIN_API_KEY"]
+    api_sec = os.environ["FCOIN_API_SECRET"]
     fcoin.auth(api_key, api_sec)
 
     precision_dict = {
