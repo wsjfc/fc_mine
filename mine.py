@@ -262,7 +262,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                         print(status)
                                         detail_status = status['data']['state']
                                         if detail_status == "canceled" or \
-                                                        detail_status == "filled":
+                                                        detail_status == "filled" or \
+                                                        detail_status == "partial_canceled":
                                             print("cancel order result: %s" % detail_status)
                                             canceled = True
                                         else:
@@ -270,16 +271,26 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             time.sleep(3)
                                     else:
                                         time.sleep(2)
-                            if detail_status == "canceled":
-                                order_amount = order['amount']
-                                order_price = order['amount']
-                                order_side = order['side']
-                                order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
-                                order_amount = float(order_amount)
+                            if detail_status == "canceled" or detail_status == "partial_canceled":
+                                if detail_status == "canceled":
+                                    order_amount = order['amount']
+                                    order_price = order['amount']
+                                    order_side = order['side']
+                                    order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
+                                    order_amount = float(order_amount)
+                                elif detail_status == "partial_canceled":
+                                    order_amount_total = order['amount']
+                                    order_amount_executed = order['filled_amount']
+                                    order_amount = float(order_amount_total) - float(order_amount_executed)
+                                    order_price = order['amount']
+                                    order_side = order['side']
+                                    order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
+                                    order_amount = float(order_amount)
 
                                 if cancel_status != None and cancel_status['status'] == 0:
                                     if order_side == 'buy':
                                         canceld_order_price, canceld_order_amount = trade_dict['buy']
+                                        print("canceled order price: %f" % canceld_order_price)
                                         cumulative_exchange -= canceld_order_price * canceld_order_amount
                                         usdt_balance = 0
                                         balances = None
@@ -364,8 +375,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     fcoin = Fcoin()
-    api_key = os.environ["FCOIN_API_KEY_1"]
-    api_sec = os.environ["FCOIN_API_SECRET_1"]
+    api_key = os.environ["FCOIN_API_KEY_0"]
+    api_sec = os.environ["FCOIN_API_SECRET_0"]
     fcoin.auth(api_key, api_sec)
 
     precision_dict = {
