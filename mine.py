@@ -145,7 +145,6 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
             omg_balance = 0
             eth_balance = 0
             balances = None
-            time.sleep(2)
             while balances == None:
                 balances = fcoin.get_balance()
                 if balances != None:
