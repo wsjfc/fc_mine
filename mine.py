@@ -345,8 +345,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                                 cumulative_exchange += lowest_ask * order_amount
                                                 trade_dict['buy'] = (lowest_ask, order_amount)
                                     time.sleep(2)
+                                    wait_ctr = 0
 
-                    wait_ctr = 0
                     #waiting = False
 
                 prev_trading_amount = trading_amont
