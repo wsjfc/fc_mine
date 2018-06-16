@@ -292,7 +292,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                     order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
                                     order_amount = float(order_amount)
 
-                                if cancel_status != None and cancel_status['status'] == 0:
+                                if cancel_status != None and cancel_status['status'] == 0 and order_amount > 5:
                                     if order_side == 'buy':
                                         canceld_order_price, canceld_order_amount = trade_dict['buy']
                                         print("canceled order price: %f" % canceld_order_price)
@@ -311,24 +311,25 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                                             order_amount = 0.99 * usdt_balance / lowest_ask
                                             order_amount = (("{0:.%df}" % amount_precision).format(order_amount))
                                             order_amount = float(order_amount)
-                                        status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
-                                        print(str(status) + str(lineno()))
-                                        if status == None:
-                                            status = {'status': -1}
-                                        elif status['status'] == 0:
-                                            cumulative_exchange += lowest_ask * order_amount
-                                            trade_dict['buy'] = (lowest_ask, order_amount)
-                                        while status['status'] != 0:
-                                            time.sleep(api_access_interval)
+                                        if order_amount > 5:
                                             status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                                             print(str(status) + str(lineno()))
                                             if status == None:
                                                 status = {'status': -1}
-                                            elif status['status'] == 1002:
-                                                time.sleep(api_access_interval)
                                             elif status['status'] == 0:
                                                 cumulative_exchange += lowest_ask * order_amount
                                                 trade_dict['buy'] = (lowest_ask, order_amount)
+                                            while status['status'] != 0:
+                                                time.sleep(api_access_interval)
+                                                status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
+                                                print(str(status) + str(lineno()))
+                                                if status == None:
+                                                    status = {'status': -1}
+                                                elif status['status'] == 1002:
+                                                    time.sleep(api_access_interval)
+                                                elif status['status'] == 0:
+                                                    cumulative_exchange += lowest_ask * order_amount
+                                                    trade_dict['buy'] = (lowest_ask, order_amount)
 
                                     elif order_side == 'sell':
                                         canceld_order_price, canceld_order_amount = trade_dict['sell']
