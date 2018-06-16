@@ -183,26 +183,28 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision):
                     trading_sym, trade_price, trading_amont = params
                     status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
                     print('sell status' + str(status))
-                    if status != None:
-                        while status['status'] != 0:
-                            time.sleep(api_access_interval)
-                            status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
-                            if status == None:
-                                status = {'status':-1}
-                        #cumulative_exchange += trade_price * trading_amont
+                    if status == None:
+                        status = {'status': -1}
+                    while status['status'] != 0:
+                        time.sleep(api_access_interval)
+                        status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
+                        if status == None:
+                            status = {'status':-1}
+                    #cumulative_exchange += trade_price * trading_amont
                     trade_dict['sell'] = (trade_price, trading_amont)
 
                 def buy_(params):
                     trading_sym, trade_price, trading_amont = params
                     status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
                     print('buy  status' + str(status))
-                    if status != None:
-                        while status['status'] != 0:
-                            time.sleep(api_access_interval)
-                            status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
-                            if status == None:
-                                status = {'status':-1}
-                        #cumulative_exchange += trade_price * trading_amont
+                    if status == None:
+                        status = {'status': -1}
+                    while status['status'] != 0:
+                        time.sleep(api_access_interval)
+                        status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
+                        if status == None:
+                            status = {'status':-1}
+                    #cumulative_exchange += trade_price * trading_amont
                     trade_dict['buy'] = (trade_price, trading_amont)
 
                 async def buyNsell():
