@@ -9,7 +9,7 @@ import asyncio
 import time
 import inspect
 
-api_access_interval = 0.01
+api_access_interval = 0.02
 
 def lineno():
     """Returns the current line number in our program."""
