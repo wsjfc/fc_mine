@@ -57,37 +57,37 @@ def check(fcoin):
 
     return eth_trades
 
-def fcoin_get_order(fcoin, sym, state):
+def fcoin_get_order(fcoin, sym, state, limits=20):
     orders = None
     while orders == None:
-        orders = fcoin.list_orders(symbol=sym, states=state)
+        orders = fcoin.list_orders(symbol=sym, states=state, limit=limits)
         if orders != None:
             return orders
         else:
             time.sleep(api_access_interval)
 
 def get_balance(fcoin, target_cur, base_cur):
-    omg_balance = 0
-    eth_balance = 0
+    target_cur_balance = 0
+    base_cur_balance = 0
     balances = None
     while balances == None:
         balances = fcoin.get_balance()
         if balances != None:
             for bl in balances['data']:
                 if bl['currency'] == target_cur:
-                    omg_balance = float(bl['available'])
+                    target_cur_balance = float(bl['available'])
                 elif bl['currency'] == base_cur:
-                    eth_balance = float(bl['available'])
+                    base_cur_balance = float(bl['available'])
         else:
             time.sleep(api_access_interval)
 
-    return omg_balance, eth_balance
+    return target_cur_balance, base_cur_balance
 
 def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug=False):
     # get initial balance
-    omg_balance, eth_balance = get_balance(fcoin, target_cur, base_cur)
-    print("initial balance %s: %f" % (target_cur, omg_balance))
-    print("initial balance %s: %f" % (base_cur, eth_balance))
+    target_cur_balance, base_cur_balance = get_balance(fcoin, target_cur, base_cur)
+    print("initial balance %s: %f" % (target_cur, target_cur_balance))
+    print("initial balance %s: %f" % (base_cur, base_cur_balance))
     input("Press Enter to continue...")
 
     trading_sym = target_cur + base_currency
@@ -96,28 +96,31 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
     highest_bid = ret['data']['bids'][0]
     initial_price = ((lowest_ask + highest_bid) / 2)
 
-    total_assets = initial_price * omg_balance + eth_balance
+    initial_assets = initial_price * target_cur_balance + base_cur_balance
 
     trading_amont = 1
     prev_trading_amount = trading_amont
     trade_ctr = 0
     trading_loss = 0
     trade_dict = {}
-    while omg_balance > 0 and eth_balance > 0:
+    cumulative_exchange = 0
+    ori_ts = time.time()
+    ori_ts = ori_ts * 1000
+    while target_cur_balance > 0 and base_cur_balance > 0:
         print("------- start trading session -------")
 
-        # get eth amount
-        omg_balance = 0
-        eth_balance = 0
+        # get assets amount
+        target_cur_balance = 0
+        base_cur_balance = 0
         balances = None
         while balances == None:
             balances = fcoin.get_balance()
             if balances != None:
                 for bl in balances['data']:
                     if bl['currency'] == target_cur:
-                        omg_balance = float(bl['available'])
+                        target_cur_balance = float(bl['available'])
                     elif bl['currency'] == base_cur:
-                        eth_balance = float(bl['available'])
+                        base_cur_balance = float(bl['available'])
             else:
                 time.sleep(api_access_interval)
 
@@ -140,12 +143,12 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
         trade_price = ((lowest_ask + highest_bid)/2)
         print('trading price:%f' % trade_price)
 
-        need_eth_amount = trade_price * omg_balance * 0.99
-        trading_eth_amount = eth_balance * 0.99
-        if need_eth_amount < trading_eth_amount:
-            trading_eth_amount = need_eth_amount
+        need_basecurrency_amount = trade_price * target_cur_balance * 0.99
+        trading_basecurrency_amount = base_cur_balance * 0.99
+        if need_basecurrency_amount < trading_basecurrency_amount:
+            trading_basecurrency_amount = need_basecurrency_amount
 
-        trading_amont = (trading_eth_amount/trade_price)
+        trading_amont = (trading_basecurrency_amount/trade_price)
 
         trade_price = ("{0:.%df}" % (price_precision)).format(trade_price)
         trade_price = float(trade_price)
@@ -153,7 +156,6 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
         trading_amont = ("{0:.%df}" % (amount_precision)).format(trading_amont)
         trading_amont = float(trading_amont)
         print('trading amount: ###--- %f ---### %f' % (trading_amont, trading_amont/prev_trading_amount))
-        cumulative_exchange = 0
         if trading_amont > 5:
             print("sell&buy...")
             def sell_(params):
@@ -341,21 +343,52 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             prev_trading_amount = trading_amont
             trade_ctr += 1
             print("trade times: %d" % trade_ctr)
-            if len(trade_dict) > 0:
-                buy_price, buy_amount = trade_dict['buy']
-                sell_price, sell_amount = trade_dict['sell']
-                diff_amount = buy_amount if buy_amount < sell_amount else sell_amount
-                trading_loss += (buy_price - sell_price) * diff_amount
 
-                print("trading loss: %f" % trading_loss)
+            orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr * 2)
+            while orders_filled == None:
+                time.sleep(api_access_interval*5)
+                orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr * 2)
+
+            orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr * 2)
+            while orders_partial_canceled == None:
+                time.sleep(api_access_interval*5)
+                orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr * 2)
+
+            orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr * 2)
+            while orders_partial_filled == None:
+                time.sleep(api_access_interval*5)
+                orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr * 2)
+
+            orders_finished = orders_filled['data'] + orders_partial_canceled['data'] + orders_partial_filled['data']
+
+            trading_loss = 0
+            for order in orders_finished:
+                ts = order['created_at']
+                if ts > ori_ts:
+                    side = order['side']
+                    executed_val = order['executed_value']
+                    price = order['price']
+                    if side == 'buy':
+                        trading_loss -= float(executed_val) * float(price)
+                    else:
+                        trading_loss += float(executed_val) * float(price)
+            print("trading loss: %f" % trading_loss)
+
+            # if len(trade_dict) > 0:
+            #     buy_price, buy_amount = trade_dict['buy']
+            #     sell_price, sell_amount = trade_dict['sell']
+            #     diff_amount = buy_amount if buy_amount < sell_amount else sell_amount
+            #     trading_loss += (buy_price - sell_price) * diff_amount
+            #
+            #     print("trading loss: %f" % trading_loss)
         else:
             print("trading_amont should above 5.")
 
         print("-------- end --------")
 
-    omg_balance, eth_balance = get_balance(fcoin=fcoin)
-    print("final balance %s: %f" % (target_cur, omg_balance))
-    print("final balance %s: %f" % (base_cur, eth_balance))
+    target_cur_balance, base_cur_balance = get_balance(fcoin=fcoin)
+    print("final balance %s: %f" % (target_cur, target_cur_balance))
+    print("final balance %s: %f" % (base_cur, base_cur_balance))
 
     return
 
@@ -390,5 +423,5 @@ if __name__ == "__main__":
         price_precision, amount_precision = precision_dict[sym_pair]
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG)
     elif MODE == 'test':
-        status = fcoin.sell('ftusdt', str(1.3), 10)
-        print(status)
+        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled')
+        print(orders_filled)
