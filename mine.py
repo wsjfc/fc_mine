@@ -256,7 +256,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         canceled = True
                                     else:
                                         print('not canceled yet: %s.' % detail_status)
-                                        fcoin.cancel_order(order['id'])
+                                        #fcoin.cancel_order(order['id'])
                                         time.sleep(2)
                                 else:
                                     time.sleep(1)
@@ -424,5 +424,5 @@ if __name__ == "__main__":
         price_precision, amount_precision = precision_dict[sym_pair]
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG)
     elif MODE == 'test':
-        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled')
+        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
         print(orders_filled)
