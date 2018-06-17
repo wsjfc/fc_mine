@@ -9,7 +9,7 @@ import asyncio
 import time
 import inspect
 
-api_access_interval = 0.2
+api_access_interval = 0.3
 
 def lineno():
     """Returns the current line number in our program."""
@@ -114,6 +114,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
         base_cur_balance = 0
         balances = None
         while balances == None:
+            time.sleep(api_access_interval)
             balances = fcoin.get_balance()
             if balances != None:
                 for bl in balances['data']:
@@ -124,6 +125,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             else:
                 time.sleep(api_access_interval)
 
+        time.sleep(api_access_interval)
         ret = fcoin.get_market_depth('L20', trading_sym)
         ready = False
         while not ready:
@@ -160,6 +162,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             print("sell&buy...")
             def sell_(params):
                 trading_sym, trade_price, trading_amont = params
+                time.sleep(1)
                 status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
                 print('sell status' + str(status))
                 if status == None:
@@ -174,6 +177,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
             def buy_(params):
                 trading_sym, trade_price, trading_amont = params
+                time.sleep(1)
                 status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
                 print('buy  status' + str(status))
                 if status == None:
@@ -215,6 +219,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             while waiting:
                 time.sleep(3)
                 orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
+                time.sleep(api_access_interval)
                 orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
                 orders_data = orders_submitted['data'] + orders_partial_filled['data']
                 print(orders_data)
@@ -225,26 +230,23 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                     time.sleep(1)
 
                 if wait_ctr > 3:
-                    ret = fcoin.get_market_depth('L20', trading_sym)
-                    while ret == None:
-                        time.sleep(api_access_interval)
-                        ret = fcoin.get_market_depth('L20', trading_sym)
-
-                    lowest_ask = ret['data']['asks'][0]
-                    highest_bid = ret['data']['bids'][0]
-
+                    time.sleep(api_access_interval)
                     orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
+                    time.sleep(api_access_interval)
                     orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
                     orders_data = orders_submitted['data'] + orders_partial_filled['data']
                     for order in orders_data:
                         if debug:
                             input('Press Enter to cancel order.')
+
+                        time.sleep(api_access_interval)
                         cancel_status = fcoin.cancel_order(order['id'])
                         canceled = False
                         detail_status = ""
                         while not canceled:
                             status = None
                             while status == None:
+                                time.sleep(api_access_interval)
                                 status = fcoin.get_order(order_id=order['id'])
                                 if status != None:
                                     print(status)
@@ -256,7 +258,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         canceled = True
                                     else:
                                         print('not canceled yet: %s.' % detail_status)
-                                        #fcoin.cancel_order(order['id'])
+                                        fcoin.cancel_order(order['id'])
                                         time.sleep(2)
                                 else:
                                     time.sleep(1)
@@ -288,6 +290,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                     usdt_balance = 0
                                     balances = None
                                     while balances == None:
+                                        time.sleep(api_access_interval)
                                         balances = fcoin.get_balance()
                                         if balances != None:
                                             for bl in balances['data']:
@@ -295,11 +298,22 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                                     usdt_balance = float(bl['available'])
                                         else:
                                             time.sleep(api_access_interval)
+
+                                    time.sleep(api_access_interval)
+                                    ret = fcoin.get_market_depth('L20', trading_sym)
+                                    while ret == None:
+                                        time.sleep(api_access_interval)
+                                        ret = fcoin.get_market_depth('L20', trading_sym)
+
+                                    lowest_ask = ret['data']['asks'][0]
+                                    highest_bid = ret['data']['bids'][0]
+
                                     if usdt_balance < lowest_ask * order_amount:
                                         order_amount = 0.99 * usdt_balance / lowest_ask
                                         order_amount = (("{0:.%df}" % amount_precision).format(order_amount))
                                         order_amount = float(order_amount)
                                     if order_amount > 5:
+                                        time.sleep(api_access_interval)
                                         status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                                         print(str(status) + str(lineno()))
                                         if status == None:
@@ -322,6 +336,17 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                 elif order_side == 'sell':
                                     canceld_order_price, canceld_order_amount = trade_dict['sell']
                                     cumulative_exchange -= canceld_order_price * canceld_order_amount
+
+                                    time.sleep(api_access_interval)
+                                    ret = fcoin.get_market_depth('L20', trading_sym)
+                                    while ret == None:
+                                        time.sleep(api_access_interval)
+                                        ret = fcoin.get_market_depth('L20', trading_sym)
+
+                                    lowest_ask = ret['data']['asks'][0]
+                                    highest_bid = ret['data']['bids'][0]
+
+                                    time.sleep(api_access_interval)
                                     status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
                                     print(str(status) + str(lineno()))
                                     if status == None:
@@ -345,19 +370,22 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             trade_ctr += 1
             print("trade times: %d" % trade_ctr)
 
+            time.sleep(api_access_interval)
             orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr * 2)
             while orders_filled == None:
-                time.sleep(api_access_interval*5)
+                time.sleep(api_access_interval)
                 orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr * 2)
 
+            time.sleep(api_access_interval)
             orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr * 2)
             while orders_partial_canceled == None:
-                time.sleep(api_access_interval*5)
+                time.sleep(api_access_interval)
                 orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr * 2)
 
+            time.sleep(api_access_interval)
             orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr * 2)
             while orders_partial_filled == None:
-                time.sleep(api_access_interval*5)
+                time.sleep(api_access_interval)
                 orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr * 2)
 
             orders_finished = orders_filled['data'] + orders_partial_canceled['data'] + orders_partial_filled['data']
@@ -370,9 +398,9 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                     executed_val = order['executed_value']
                     price = order['price']
                     if side == 'buy':
-                        trading_loss -= float(executed_val) * float(price)
-                    else:
                         trading_loss += float(executed_val) * float(price)
+                    else:
+                        trading_loss -= float(executed_val) * float(price)
             print("trading loss: %f" % trading_loss)
 
             # if len(trade_dict) > 0:
@@ -424,5 +452,6 @@ if __name__ == "__main__":
         price_precision, amount_precision = precision_dict[sym_pair]
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG)
     elif MODE == 'test':
-        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
+        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled')
         print(orders_filled)
+        #print(fcoin.get_server_time())
