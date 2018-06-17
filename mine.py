@@ -256,6 +256,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         canceled = True
                                     else:
                                         print('not canceled yet: %s.' % detail_status)
+                                        fcoin.cancel_order(order['id'])
                                         time.sleep(2)
                                 else:
                                     time.sleep(1)
