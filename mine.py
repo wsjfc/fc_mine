@@ -256,7 +256,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         canceled = True
                                     else:
                                         print('not canceled yet: %s.' % detail_status)
-                                        time.sleep(1)
+                                        time.sleep(2)
                                 else:
                                     time.sleep(1)
                         if detail_status == "canceled" or detail_status == "partial_canceled":
