@@ -109,6 +109,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
     while target_cur_balance > 0 and base_cur_balance > 0:
         print("------- start trading session -------")
 
+        time.sleep(3.3)
         # get assets amount
         target_cur_balance = 0
         base_cur_balance = 0
@@ -162,7 +163,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             print("sell&buy...")
             def sell_(params):
                 trading_sym, trade_price, trading_amont = params
-                time.sleep(1)
+                #time.sleep(1)
                 status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
                 print('sell status' + str(status))
                 if status == None:
@@ -177,7 +178,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
             def buy_(params):
                 trading_sym, trade_price, trading_amont = params
-                time.sleep(1)
+                #time.sleep(1)
                 status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
                 print('buy  status' + str(status))
                 if status == None:
@@ -229,7 +230,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                     wait_ctr += 1
                     time.sleep(1)
 
-                if wait_ctr > 3:
+                if wait_ctr > 1:
                     time.sleep(api_access_interval)
                     orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
                     time.sleep(api_access_interval)
@@ -455,6 +456,5 @@ if __name__ == "__main__":
         price_precision, amount_precision = precision_dict[sym_pair]
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG, ignore_loss=ignore_loss)
     elif MODE == 'test':
-        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled')
-        print(orders_filled)
-        #print(fcoin.get_server_time())
+        ret = fcoin.get_market_depth('L20', 'ftusdt')
+        print(ret)
