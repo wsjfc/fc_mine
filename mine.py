@@ -167,7 +167,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 trading_sym, trade_price, trading_amont = params
                 #time.sleep(1)
                 status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
-                print('sell status' + str(status))
+                print('sell status: ' + str(status))
                 if status == None:
                     status = {'status': -1}
                 while status['status'] != 0:
@@ -182,7 +182,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 trading_sym, trade_price, trading_amont = params
                 #time.sleep(1)
                 status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
-                print('buy  status' + str(status))
+                print('buy  status: ' + str(status))
                 if status == None:
                     status = {'status': -1}
                 while status['status'] != 0:
@@ -251,8 +251,10 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                             status = fcoin.get_order(order_id=order['id'])
                             if status != None:
                                 if status['data']['state'] == "filled":
-                                    cancel_status = {'status': 0}
-                        while cancel_status['status'] != 0 and cancel_status['status'] != 3008:
+                                    cancel_status = {'status' : 0}
+                                else:
+                                    cancel_status = {'status' : -1}
+                        while cancel_status['status'] != 0:
                             time.sleep(1)
                             cancel_status = fcoin.cancel_order(order['id'])
                             if cancel_status == None:
