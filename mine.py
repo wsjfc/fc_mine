@@ -473,6 +473,20 @@ if __name__ == "__main__":
     elif MODE == 'mine':
         price_precision, amount_precision = precision_dict[sym_pair]
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG, ignore_loss=ignore_loss)
+    elif MODE == 'cancel':
+        orders_submitted = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
+        for order in orders_submitted:
+            cancel_status = fcoin.cancel_order(order['id'])
+            print('cancel status: %s' % cancel_status)
+            if cancel_status == None:
+                cancel_status = {'status': -1}
+            while cancel_status['status'] != 0 and cancel_status['status'] != 3008:
+                time.sleep(1)
+                cancel_status = fcoin.cancel_order(order['id'])
+                if cancel_status == None:
+                    cancel_status = {'status': -1}
+        print('done')
+
     elif MODE == 'test':
         trade_ctr_est = 3000
         ori_ts = 1529338603 * 1000
