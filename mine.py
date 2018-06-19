@@ -247,7 +247,11 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         cancel_status = fcoin.cancel_order(order['id'])
                         print('cancel status: %s' % cancel_status)
                         if cancel_status == None:
-                            cancel_status = {'status': -1}
+                            time.sleep(api_access_interval)
+                            status = fcoin.get_order(order_id=order['id'])
+                            if status != None:
+                                if status['data']['state'] == "filled":
+                                    cancel_status = {'status': 0}
                         while cancel_status['status'] != 0 and cancel_status['status'] != 3008:
                             time.sleep(1)
                             cancel_status = fcoin.cancel_order(order['id'])
@@ -475,7 +479,7 @@ if __name__ == "__main__":
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG, ignore_loss=ignore_loss)
     elif MODE == 'cancel':
         orders_submitted = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
-        for order in orders_submitted:
+        for order in orders_submitted['data']:
             cancel_status = fcoin.cancel_order(order['id'])
             print('cancel status: %s' % cancel_status)
             if cancel_status == None:
