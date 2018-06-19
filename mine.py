@@ -247,7 +247,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         cancel_status = fcoin.cancel_order(order['id'])
                         if cancel_status == None:
                             cancel_status = {'status': -1}
-                        while cancel_status['status'] != 0:
+                        while cancel_status['status'] != 0 and cancel_status['status'] != 3008:
                             time.sleep(1)
                             cancel_status = fcoin.cancel_order(order['id'])
                             if cancel_status == None:
