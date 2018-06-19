@@ -230,7 +230,11 @@ def mining(debug=False, ignore_loss=False):
                     input('Press Enter to cancel order.')
 
                 time.sleep(api_access_interval)
-                cancel_status = fcoin.cancel_order(order_data['id'])
+                while True:
+                    cancel_status = fcoin.cancel_order(order_data['id'])
+                    if cancel_status and cancel_status['status'] == 0:
+                        break
+                    time.sleep(api_access_interval)
                 canceled = False
                 detail_status = ""
                 while not canceled:
