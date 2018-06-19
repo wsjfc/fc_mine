@@ -106,6 +106,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
     cumulative_exchange = 0
     ori_ts = time.time()
     ori_ts = ori_ts * 1000
+    last_check_ts = ori_ts
+    orders = []
     while target_cur_balance > 0 and base_cur_balance > 0:
         print("------- start trading session -------")
 
@@ -371,31 +373,33 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             trade_ctr += 1
             print("trade times: %d" % trade_ctr)
 
-            if not ignore_loss:
+            if trade_ctr % 30 == 0 and not ignore_loss:
+                print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
+                max_order_limit = 100
                 time.sleep(api_access_interval)
-                orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr * 2)
+                orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', max_order_limit)
                 while orders_filled == None:
                     time.sleep(api_access_interval)
-                    orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr * 2)
+                    orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', max_order_limit)
 
                 time.sleep(api_access_interval)
-                orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr * 2)
+                orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', max_order_limit)
                 while orders_partial_canceled == None:
                     time.sleep(api_access_interval)
-                    orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr * 2)
+                    orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', max_order_limit)
 
                 time.sleep(api_access_interval)
-                orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr * 2)
+                orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', max_order_limit)
                 while orders_partial_filled == None:
                     time.sleep(api_access_interval)
-                    orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr * 2)
+                    orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', max_order_limit)
 
                 orders_finished = orders_filled['data'] + orders_partial_canceled['data'] + orders_partial_filled['data']
 
                 trading_loss = 0
                 for order in orders_finished:
                     ts = order['created_at']
-                    if ts > ori_ts:
+                    if ts > last_check_ts and order['id'] not in orders:
                         side = order['side']
                         executed_val = order['executed_value']
                         price = order['price']
@@ -403,7 +407,11 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                             trading_loss += float(executed_val) * float(price)
                         else:
                             trading_loss -= float(executed_val) * float(price)
+                        orders.append[order['id']]
                 print("trading loss: %f" % trading_loss)
+                last_check_ts = time.time()
+                last_check_ts *= 1000
+                print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
 
                 # if len(trade_dict) > 0:
                 #     buy_price, buy_amount = trade_dict['buy']
