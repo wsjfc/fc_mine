@@ -362,8 +362,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         if status == None:
                                             status = {'status': -1}
                                         elif status['status'] == 0:
-                                            cumulative_exchange += lowest_ask * order_amount
-                                            trade_dict['buy'] = (lowest_ask, order_amount)
+                                            cumulative_exchange += highest_bid * order_amount
+                                            trade_dict['buy'] = (highest_bid, order_amount)
                                 time.sleep(api_access_interval)
                                 wait_ctr = 0
 
@@ -425,7 +425,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", default='check',  help="model type: check; mine")
+    parser.add_argument("--mode", default='check',  help="model type: check; mine; test.")
     parser.add_argument("--cur", default='ft_usdt',  help="currency type: ft_usdt, etc_usdt, omg_eth ...")
     parser.add_argument("--debug", default=False, action='store_true')
     parser.add_argument("--ignore", default=False, action='store_true')
@@ -450,11 +450,43 @@ if __name__ == "__main__":
     ignore_loss = args.ignore
     target_currency = sym_pair.split('_')[0]
     base_currency = sym_pair.split('_')[1]
+
     if MODE == 'check':
         check(fcoin=fcoin)
     elif MODE == 'mine':
         price_precision, amount_precision = precision_dict[sym_pair]
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG, ignore_loss=ignore_loss)
     elif MODE == 'test':
-        ret = fcoin.get_market_depth('L20', 'ftusdt')
-        print(ret)
+        trade_ctr_est = 3000
+        ori_ts = 1529338603 * 1000
+        time.sleep(api_access_interval)
+        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr_est * 2)
+        while orders_filled == None:
+            time.sleep(api_access_interval)
+            orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr_est * 2)
+
+        time.sleep(api_access_interval)
+        orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr_est * 2)
+        while orders_partial_canceled == None:
+            time.sleep(api_access_interval)
+            orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr_est * 2)
+
+        time.sleep(api_access_interval)
+        orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr_est * 2)
+        while orders_partial_filled == None:
+            time.sleep(api_access_interval)
+            orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr_est * 2)
+
+        print("get %d filled orders, %d partial_canceled orders, %d partial_filled orders" %
+              (len(orders_filled['data']), len(orders_partial_canceled['data']), len(orders_partial_filled['data'])))
+        orders_finished = orders_filled['data'] + orders_partial_canceled['data'] + orders_partial_filled['data']
+        trading_fee = 0
+        for order in orders_finished:
+            ts = order['created_at']
+            if ts > ori_ts:
+                side = order['side']
+                executed_val = order['executed_value']
+                price = order['price']
+                trading_fee += float(executed_val) * float(price) * 0.001
+
+        print("trading fee: %f" % trading_fee)
