@@ -246,19 +246,21 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
                         cancel_status = fcoin.cancel_order(order['id'])
                         print('cancel status: %s' % cancel_status)
-                        if cancel_status == None:
+                        while cancel_status == None:
                             time.sleep(api_access_interval)
                             status = fcoin.get_order(order_id=order['id'])
-                            if status != None:
-                                if status['data']['state'] == "filled":
-                                    cancel_status = {'status' : 0}
-                                else:
-                                    cancel_status = {'status' : -1}
-                        while cancel_status['status'] != 0:
-                            time.sleep(1)
-                            cancel_status = fcoin.cancel_order(order['id'])
-                            if cancel_status == None:
-                                cancel_status = {'status': -1}
+                            while status == None:
+                                time.sleep(api_access_interval)
+                                status = fcoin.get_order(order_id=order['id'])
+                            if status['data']['state'] == "filled":
+                                cancel_status = {'status' : 0}
+                            elif status['data']['state'] == "submitted":
+                                cancel_status = fcoin.cancel_order(order['id'])
+                        # while cancel_status['status'] != 0:
+                        #     time.sleep(1)
+                        #     cancel_status = fcoin.cancel_order(order['id'])
+                        #     if cancel_status == None:
+                        #         cancel_status = {'status': -1}
 
                         canceled = False
                         detail_status = ""
@@ -493,37 +495,55 @@ if __name__ == "__main__":
                     cancel_status = {'status': -1}
         print('done')
 
-    elif MODE == 'test':
-        trade_ctr_est = 3000
-        ori_ts = 1529338603 * 1000
-        time.sleep(api_access_interval)
-        orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr_est * 2)
-        while orders_filled == None:
-            time.sleep(api_access_interval)
-            orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', trade_ctr_est * 2)
+    elif MODE == 'split':
+        target_cur = 'ft'
 
-        time.sleep(api_access_interval)
-        orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr_est * 2)
-        while orders_partial_canceled == None:
-            time.sleep(api_access_interval)
-            orders_partial_canceled = fcoin_get_order(fcoin, 'ftusdt', 'partial_canceled', trade_ctr_est * 2)
+        target_cur_balance, base_cur_balance = get_balance(fcoin, target_currency, base_currency)
+        print("initial balance %s: %f" % (target_currency, target_cur_balance))
+        print("initial balance %s: %f" % (base_currency, base_cur_balance))
+        trading_sym = target_currency + base_currency
+        ret = fcoin.get_market_depth('L20', trading_sym)
+        lowest_ask = ret['data']['asks'][0]
+        highest_bid = ret['data']['bids'][0]
+        initial_price = ((lowest_ask + highest_bid) / 2)
 
-        time.sleep(api_access_interval)
-        orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr_est * 2)
-        while orders_partial_filled == None:
-            time.sleep(api_access_interval)
-            orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled', trade_ctr_est * 2)
+        initial_assets = initial_price * target_cur_balance + base_cur_balance
+        split_target = initial_assets / 2
+        if base_cur_balance < split_target:
+            order_side = 'sell'
+            price = highest_bid
+            amount = (initial_price * target_cur_balance - split_target) / initial_price
+            amount *= 0.98
+            trading_amont = ("{0:.%df}" % (2)).format(amount)
+            trading_amont = float(trading_amont)
+            status = fcoin.sell(trading_sym, str(price), trading_amont)
+            print('buy  status: ' + str(status))
+            if status == None:
+                status = {'status': -1}
+            while status['status'] != 0:
+                time.sleep(api_access_interval)
+                status = fcoin.sell(trading_sym, str(price), trading_amont)
+                if status == None:
+                    status = {'status': -1}
+        else:
+            order_side = 'buy'
+            price = lowest_ask
+            amount = (base_cur_balance - split_target) / initial_price
+            amount *= 0.98
+            trading_amont = ("{0:.%df}" % (2)).format(amount)
+            trading_amont = float(trading_amont)
+            status = fcoin.buy(trading_sym, str(price), trading_amont)
+            print('buy  status: ' + str(status))
+            if status == None:
+                status = {'status': -1}
+            while status['status'] != 0:
+                time.sleep(api_access_interval)
+                status = fcoin.buy(trading_sym, str(price), trading_amont)
+                if status == None:
+                    status = {'status': -1}
 
-        print("get %d filled orders, %d partial_canceled orders, %d partial_filled orders" %
-              (len(orders_filled['data']), len(orders_partial_canceled['data']), len(orders_partial_filled['data'])))
-        orders_finished = orders_filled['data'] + orders_partial_canceled['data'] + orders_partial_filled['data']
-        trading_fee = 0
-        for order in orders_finished:
-            ts = order['created_at']
-            if ts > ori_ts:
-                side = order['side']
-                executed_val = order['executed_value']
-                price = order['price']
-                trading_fee += float(executed_val) * float(price) * 0.001
+        target_cur_balance, base_cur_balance = get_balance(fcoin, target_currency, base_currency)
+        print("balance of %s: %f" % (target_currency, target_cur_balance))
+        print("balance of %s: %f" % (base_currency, base_cur_balance))
 
-        print("trading fee: %f" % trading_fee)
+
