@@ -258,7 +258,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                             if status['data']['state'] == "filled":
                                 cancel_status = {'status' : 0}
                             elif status['data']['state'] == "submitted" or \
-                                status['data']['state'] == "partial_filled":
+                                status['data']['state'] == "partial_filled" or \
+                                status['data']['state'] == "partial_canceled":
                                 cancel_status = fcoin.cancel_order(order['id'])
 
                         canceled = False
