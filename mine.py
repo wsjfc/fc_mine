@@ -425,7 +425,8 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         else:
                             trading_loss -= float(executed_val) * float(price)
                         orders.append(order['id'])
-                print("trading loss: %f" % trading_loss)
+                print("trading loss: %f, loss fraction: %f, estimated profit fraction: %f" %
+                      (trading_loss, trading_loss/initial_assets, (1-(0.999**trade_ctr))*0.2))
                 last_check_ts = time.time()
                 last_check_ts *= 1000
                 print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
