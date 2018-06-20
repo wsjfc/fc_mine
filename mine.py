@@ -64,7 +64,7 @@ def fcoin_get_order(fcoin, sym, state, limits=20):
         if orders != None:
             return orders
         else:
-            time.sleep(2)
+            time.sleep(3)
 
 def get_balance(fcoin, target_cur, base_cur):
     target_cur_balance = 0
@@ -247,7 +247,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         cancel_status = fcoin.cancel_order(order['id'])
                         print('cancel status: %s' % cancel_status)
                         while cancel_status == None:
-                            time.sleep(1)
+                            time.sleep(3)
                             status = fcoin.get_order(order_id=order['id'])
                             while status == None:
                                 time.sleep(5)
@@ -267,7 +267,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         while not canceled:
                             status = None
                             while status == None:
-                                time.sleep(1)
+                                time.sleep(3)
                                 status = fcoin.get_order(order_id=order['id'])
                                 if status != None:
                                     print(status)
