@@ -251,6 +251,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         while cancel_status == None:
                             time.sleep(3)
                             status = fcoin.get_order(order_id=order['id'])
+                            print(pretty_str(status))
                             while status == None:
                                 time.sleep(5)
                                 status = fcoin.get_order(order_id=order['id'])
