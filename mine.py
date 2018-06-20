@@ -232,7 +232,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                     wait_ctr += 1
                     time.sleep(1)
 
-                if wait_ctr > 1:
+                if wait_ctr >= 1:
                     time.sleep(api_access_interval)
                     orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
                     time.sleep(api_access_interval)
@@ -342,7 +342,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                             cumulative_exchange += lowest_ask * order_amount
                                             trade_dict['buy'] = (lowest_ask, order_amount)
                                         while status['status'] != 0:
-                                            time.sleep(api_access_interval)
+                                            time.sleep(2)
                                             status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                                             print(str(status) + str(lineno()))
                                             if status == None:
@@ -375,7 +375,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         cumulative_exchange += highest_bid * order_amount
                                         trade_dict['buy'] = (highest_bid, order_amount)
                                     while status['status'] != 0:
-                                        time.sleep(api_access_interval)
+                                        time.sleep(2)
                                         status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
                                         print(str(status) + ' ' + str(lineno()))
                                         if status == None:
