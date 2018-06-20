@@ -15,6 +15,7 @@ def check(fcoin):
     usdt_balance = 0
     btc_balance = 0
     eth_balance = 0
+    ft_balance = 0
     balances = fcoin.get_balance()
     for bl in balances['data']:
         if bl['currency'] == 'usdt':
@@ -23,15 +24,17 @@ def check(fcoin):
             btc_balance = float(bl['available'])
         elif bl['currency'] == 'eth':
             eth_balance = float(bl['available'])
+        elif bl['currency'] == 'ft':
+            ft_balance = float(bl['available'])
 
-    print("initial balance: %f, %f, %f" % (usdt_balance, btc_balance, eth_balance))
+    print("initial balance: %f, %f, %f, %f" % (usdt_balance, btc_balance, eth_balance, ft_balance))
 
     while True:
         time.sleep(5)
         balances = fcoin.get_balance()
         for bl in balances['data']:
             if bl['currency'] == 'usdt':
-                if float(bl['available']) > usdt_balance:
+                if float(bl['available']) > 8000:
                     usdt_balance = float(bl['available'])
                     mail_subject = float(bl['available'])
                     mail_subject = str('your usdt comes :)')
@@ -49,8 +52,6 @@ def check(fcoin):
                     except s.SMTPException:
                         return 'mail send failed'
 
-                    finally:
-                        s.quit()
                     #fcoin.buy()
             elif bl['currency'] == 'btc':
                 if float(bl['available']) > btc_balance:
@@ -60,6 +61,22 @@ def check(fcoin):
                 if float(bl['available']) > eth_balance:
                     eth_balance = float(bl['available'])
                     #fcoin.buy()
+            elif bl['currency'] == 'ft':
+                if float(bl['available']) > 4000:
+                    mail_subject = float(bl['available'])
+                    msg = MIMEText("sell!")
+                    msg['Subject'] = mail_subject
+                    msg['From'] = msg_from
+                    msg['To'] = msg_to
+
+                    try:
+                        s = smtplib.SMTP_SSL("smtp.qq.com", 465)
+                        s.login(msg_from, passwd)
+                        s.sendmail(msg_from, msg_to, msg.as_string())
+                        return 'mail send success'
+
+                    except s.SMTPException:
+                        return 'mail send failed'
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
