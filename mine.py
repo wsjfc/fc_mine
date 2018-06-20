@@ -220,7 +220,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             if debug:
                 input('Press Enter to check order status.')
             while waiting:
-                time.sleep(3)
+                time.sleep(1)
                 orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
                 time.sleep(api_access_interval)
                 orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
