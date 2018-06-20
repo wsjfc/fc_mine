@@ -248,6 +248,10 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
                         cancel_status = fcoin.cancel_order(order['id'])
                         print('cancel status: %s' % cancel_status)
+
+                        canceled = False
+                        detail_status = ""
+
                         while cancel_status == None:
                             time.sleep(3)
                             status = fcoin.get_order(order_id=order['id'])
@@ -258,12 +262,13 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                             if status['data']['state'] == "filled" or \
                                 status['data']['state'] == "partial_canceled":
                                 cancel_status = {'status' : 0}
-                            elif status['data']['state'] == "submitted" or \
-                                status['data']['state'] == "partial_filled":
+                            elif status['data']['state'] == "submitted" :
                                 cancel_status = fcoin.cancel_order(order['id'])
+                            elif status['data']['state'] == "partial_filled":
+                                cancel_status = {'status': 0}
+                                canceled = True
+                                detail_status = "partial_filled"
 
-                        canceled = False
-                        detail_status = ""
                         while not canceled:
                             status = None
                             while status == None:
@@ -283,25 +288,19 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         time.sleep(2)
                                 else:
                                     time.sleep(1)
-                        if detail_status == "canceled" or detail_status == "partial_canceled":
+                        if detail_status == "canceled" \
+                                or detail_status == "partial_canceled" \
+                                or detail_status == "partial_filled":
                             if debug:
                                 input('Press Enter to replace the order.')
-                            if detail_status == "canceled":
-                                order_amount_total = order['amount']
-                                order_amount_executed = order['filled_amount']
-                                order_amount = float(order_amount_total) - float(order_amount_executed)
-                                order_price = order['amount']
-                                order_side = order['side']
-                                order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
-                                order_amount = float(order_amount)
-                            elif detail_status == "partial_canceled":
-                                order_amount_total = order['amount']
-                                order_amount_executed = order['filled_amount']
-                                order_amount = float(order_amount_total) - float(order_amount_executed)
-                                order_price = order['amount']
-                                order_side = order['side']
-                                order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
-                                order_amount = float(order_amount)
+
+                            order_amount_total = order['amount']
+                            order_amount_executed = order['filled_amount']
+                            order_amount = float(order_amount_total) - float(order_amount_executed)
+                            order_price = order['amount']
+                            order_side = order['side']
+                            order_amount = ("{0:.%df}" % amount_precision).format(float(order_amount))
+                            order_amount = float(order_amount)
 
                             if cancel_status != None and cancel_status['status'] == 0 and order_amount > 5:
                                 if order_side == 'buy':
