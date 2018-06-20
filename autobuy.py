@@ -32,6 +32,9 @@ def check(fcoin):
     while True:
         time.sleep(5)
         balances = fcoin.get_balance()
+        while balances == None:
+            time.sleep(5)
+            balances = fcoin.get_balance()
         for bl in balances['data']:
             if bl['currency'] == 'usdt':
                 if float(bl['available']) > 8000:
@@ -84,8 +87,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     fcoin = Fcoin()
-    api_key = os.environ["FCOIN_API_KEY"]
-    api_sec = os.environ["FCOIN_API_SECRET"]
+    api_key = os.environ["FCOIN_API_KEY_0"]
+    api_sec = os.environ["FCOIN_API_SECRET_0"]
     fcoin.auth(api_key, api_sec)
 
     MODE = args.mode
