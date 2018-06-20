@@ -487,7 +487,8 @@ if __name__ == "__main__":
         mining(fcoin, target_currency, base_currency, price_precision, amount_precision, debug=DEBUG, ignore_loss=ignore_loss)
     elif MODE == 'cancel':
         orders_submitted = fcoin_get_order(fcoin, 'ftusdt', 'submitted')
-        for order in orders_submitted['data']:
+        orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled')
+        for order in orders_submitted['data'] + orders_partial_filled['data']:
             cancel_status = fcoin.cancel_order(order['id'])
             print('cancel status: %s' % pretty_str(cancel_status))
             if cancel_status == None:
