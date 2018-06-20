@@ -110,6 +110,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
     last_check_ts = ori_ts
     orders = []
     while target_cur_balance > 0 and base_cur_balance > 0:
+        per_trade_start_time = time.time()
         print("------- start trading session -------")
 
         time.sleep(3.3)
@@ -356,6 +357,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
                                 elif order_side == 'sell':
                                     canceld_order_price, canceld_order_amount = trade_dict['sell']
+                                    print("canceled order price: %f" % canceld_order_price)
                                     cumulative_exchange -= canceld_order_price * canceld_order_amount
 
                                     time.sleep(api_access_interval)
@@ -389,7 +391,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
             prev_trading_amount = trading_amont
             trade_ctr += 1
-            print("trade times: %d" % trade_ctr)
+            print("trade counter: %d" % trade_ctr)
 
             if trade_ctr % 30 == 0 and not ignore_loss:
                 print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
@@ -441,6 +443,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
         else:
             print("trading_amount should above 5.")
 
+        print("trade time: " "{0:.2f}".format(time.time() - per_trade_start_time))
         print("-------- end --------")
 
     target_cur_balance, base_cur_balance = get_balance(fcoin=fcoin)

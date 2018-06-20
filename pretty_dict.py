@@ -13,7 +13,9 @@ need_item = {'status': str,
              'created_at': lambda x: '/'.join(time.ctime(x / 1000.0).split()[1:-1])
              }
 
-color_start = '\033[1;32m'
+green_start = '\033[1;32m'
+red_start = '\033[1;31m'
+blue_start = '\033[1;34m'
 color_end = '\033[0m'
 
 
@@ -44,7 +46,11 @@ def pretty_str(obj, pre_blank=0):
                 keys += key + ' '
                 values += value + ' '
                 pre_blank += len(keys)
-        return color_start + keys[:-1] + color_end + '\n' + values[:-1]
+        if 'sell' in values:
+            return keys[:-1] + '\n' + red_start + values[:-1] + color_end
+        if 'buy' in values:
+            return keys[:-1] + '\n' + green_start + values[:-1] + color_end
+        return blue_start + keys[:-1] + color_end + '\n' + values[:-1]
 
     return str(obj)
 
