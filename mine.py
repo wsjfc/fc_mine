@@ -413,7 +413,6 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
                 orders_finished = orders_filled['data'] + orders_partial_canceled['data'] + orders_partial_filled['data']
 
-                trading_loss = 0
                 for order in orders_finished:
                     ts = order['created_at']
                     if ts > last_check_ts and order['id'] not in orders:
@@ -439,7 +438,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 #
                 #     print("trading loss: %f" % trading_loss)
         else:
-            print("trading_amont should above 5.")
+            print("trading_amount should above 5.")
 
         print("-------- end --------")
 
