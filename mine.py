@@ -64,7 +64,7 @@ def fcoin_get_order(fcoin, sym, state, limits=20):
         if orders != None:
             return orders
         else:
-            time.sleep(1)
+            time.sleep(2)
 
 def get_balance(fcoin, target_cur, base_cur):
     target_cur_balance = 0
@@ -267,7 +267,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         while not canceled:
                             status = None
                             while status == None:
-                                time.sleep(api_access_interval)
+                                time.sleep(1)
                                 status = fcoin.get_order(order_id=order['id'])
                                 if status != None:
                                     print(status)
@@ -342,7 +342,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                             cumulative_exchange += lowest_ask * order_amount
                                             trade_dict['buy'] = (lowest_ask, order_amount)
                                         while status['status'] != 0:
-                                            time.sleep(3)
+                                            time.sleep(4)
                                             status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
                                             print(str(status) + str(lineno()))
                                             if status == None:
@@ -375,7 +375,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         cumulative_exchange += highest_bid * order_amount
                                         trade_dict['buy'] = (highest_bid, order_amount)
                                     while status['status'] != 0:
-                                        time.sleep(3)
+                                        time.sleep(4)
                                         status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
                                         print(str(status) + ' ' + str(lineno()))
                                         if status == None:
