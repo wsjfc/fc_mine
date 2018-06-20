@@ -16,6 +16,7 @@ need_item = {'status': str,
 green_start = '\033[1;32m'
 red_start = '\033[1;31m'
 blue_start = '\033[1;34m'
+grey_start = '\033[0;37;40m'
 color_end = '\033[0m'
 
 
@@ -47,9 +48,9 @@ def pretty_str(obj, pre_blank=0):
                 values += value + ' '
                 pre_blank += len(keys)
         if 'sell' in values:
-            return keys[:-1] + '\n' + red_start + values[:-1] + color_end
+            return grey_start + keys[:-1] + color_end + '\n' + red_start + values[:-1] + color_end
         if 'buy' in values:
-            return keys[:-1] + '\n' + green_start + values[:-1] + color_end
+            return grey_start + keys[:-1] + color_end + '\n' + green_start + values[:-1] + color_end
         return blue_start + keys[:-1] + color_end + '\n' + values[:-1]
 
     return str(obj)
