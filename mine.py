@@ -250,7 +250,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                             time.sleep(1)
                             status = fcoin.get_order(order_id=order['id'])
                             while status == None:
-                                time.sleep(1)
+                                time.sleep(5)
                                 status = fcoin.get_order(order_id=order['id'])
                             if status['data']['state'] == "filled":
                                 cancel_status = {'status' : 0}
