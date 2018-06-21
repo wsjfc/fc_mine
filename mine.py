@@ -240,7 +240,11 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                     time.sleep(api_access_interval)
                     orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
                     orders_data = orders_submitted['data'] + orders_partial_filled['data']
+                    dealed_order_ids = []
                     for order in orders_data:
+                        if order['id'] in dealed_order_ids:
+                            continue
+                        dealed_order_ids.append(order['id'])
                         if debug:
                             input('Press Enter to cancel order.')
 
