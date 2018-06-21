@@ -84,6 +84,52 @@ def get_balance(fcoin, target_cur, base_cur):
 
     return target_cur_balance, base_cur_balance
 
+
+def auto_balance():
+    target_cur_balance, base_cur_balance = get_balance(fcoin, target_currency, base_currency)
+    print("initial balance %s: %f" % (target_currency, target_cur_balance))
+    print("initial balance %s: %f" % (base_currency, base_cur_balance))
+    trading_sym = target_currency + base_currency
+    ret = fcoin.get_market_depth('L20', trading_sym)
+    lowest_ask = ret['data']['asks'][0]
+    highest_bid = ret['data']['bids'][0]
+    initial_price = ((lowest_ask + highest_bid) / 2)
+
+    initial_assets = initial_price * target_cur_balance + base_cur_balance
+    split_target = initial_assets / 2
+    if base_cur_balance < split_target:
+        order_side = 'sell'
+        price = highest_bid
+        amount = (initial_price * target_cur_balance - split_target) / initial_price
+        amount *= 0.98
+        trading_amont = ("{0:.%df}" % (2)).format(amount)
+        trading_amont = float(trading_amont)
+        status = fcoin.sell(trading_sym, str(price), trading_amont)
+        print('buy  status: ' + pretty_str(str(status)))
+        if status == None:
+            status = {'status': -1}
+        while status['status'] != 0:
+            time.sleep(api_access_interval)
+            status = fcoin.sell(trading_sym, str(price), trading_amont)
+            if status == None:
+                status = {'status': -1}
+    else:
+        order_side = 'buy'
+        price = lowest_ask
+        amount = (base_cur_balance - split_target) / initial_price
+        amount *= 0.98
+        trading_amont = ("{0:.%df}" % (2)).format(amount)
+        trading_amont = float(trading_amont)
+        status = fcoin.buy(trading_sym, str(price), trading_amont)
+        print('buy  status: ' + pretty_str(str(status)))
+        if status == None:
+            status = {'status': -1}
+        while status['status'] != 0:
+            time.sleep(api_access_interval)
+            status = fcoin.buy(trading_sym, str(price), trading_amont)
+            if status == None:
+                status = {'status': -1}
+
 def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug=False, ignore_loss=False):
     # get initial balance
     target_cur_balance, base_cur_balance = get_balance(fcoin, target_cur, base_cur)
@@ -401,6 +447,9 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             trade_ctr += 1
             print("trade counter: %d" % trade_ctr)
 
+            if trade_ctr % 20 == 0:
+                auto_balance()
+
             if trade_ctr % 30 == 0 and not ignore_loss:
                 print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
                 max_order_limit = 100
@@ -441,13 +490,6 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 last_check_ts *= 1000
                 print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
 
-                # if len(trade_dict) > 0:
-                #     buy_price, buy_amount = trade_dict['buy']
-                #     sell_price, sell_amount = trade_dict['sell']
-                #     diff_amount = buy_amount if buy_amount < sell_amount else sell_amount
-                #     trading_loss += (buy_price - sell_price) * diff_amount
-                #
-                #     print("trading loss: %f" % trading_loss)
         else:
             print("trading_amount should above 5.")
 
@@ -509,51 +551,7 @@ if __name__ == "__main__":
         print('done')
 
     elif MODE == 'split':
-        target_cur = 'ft'
-
-        target_cur_balance, base_cur_balance = get_balance(fcoin, target_currency, base_currency)
-        print("initial balance %s: %f" % (target_currency, target_cur_balance))
-        print("initial balance %s: %f" % (base_currency, base_cur_balance))
-        trading_sym = target_currency + base_currency
-        ret = fcoin.get_market_depth('L20', trading_sym)
-        lowest_ask = ret['data']['asks'][0]
-        highest_bid = ret['data']['bids'][0]
-        initial_price = ((lowest_ask + highest_bid) / 2)
-
-        initial_assets = initial_price * target_cur_balance + base_cur_balance
-        split_target = initial_assets / 2
-        if base_cur_balance < split_target:
-            order_side = 'sell'
-            price = highest_bid
-            amount = (initial_price * target_cur_balance - split_target) / initial_price
-            amount *= 0.98
-            trading_amont = ("{0:.%df}" % (2)).format(amount)
-            trading_amont = float(trading_amont)
-            status = fcoin.sell(trading_sym, str(price), trading_amont)
-            print('buy  status: ' + pretty_str(str(status)))
-            if status == None:
-                status = {'status': -1}
-            while status['status'] != 0:
-                time.sleep(api_access_interval)
-                status = fcoin.sell(trading_sym, str(price), trading_amont)
-                if status == None:
-                    status = {'status': -1}
-        else:
-            order_side = 'buy'
-            price = lowest_ask
-            amount = (base_cur_balance - split_target) / initial_price
-            amount *= 0.98
-            trading_amont = ("{0:.%df}" % (2)).format(amount)
-            trading_amont = float(trading_amont)
-            status = fcoin.buy(trading_sym, str(price), trading_amont)
-            print('buy  status: ' + pretty_str(str(status)))
-            if status == None:
-                status = {'status': -1}
-            while status['status'] != 0:
-                time.sleep(api_access_interval)
-                status = fcoin.buy(trading_sym, str(price), trading_amont)
-                if status == None:
-                    status = {'status': -1}
+        auto_balance()
 
         target_cur_balance, base_cur_balance = get_balance(fcoin, target_currency, base_currency)
         print("balance of %s: %f" % (target_currency, target_cur_balance))
