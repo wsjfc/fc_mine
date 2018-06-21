@@ -494,6 +494,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
         else:
             print("trading_amount should above 5.")
+            auto_balance()
 
         print("trade time: " "{0:.2f}".format(time.time() - per_trade_start_time))
         print("-------- end --------")
