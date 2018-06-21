@@ -95,8 +95,9 @@ class Fcoin():
         except requests.exceptions.HTTPError as err:
             print(err)
             print(r.text)
-            if r.text is not None and r.text['status'] == 1016:
+            if "account balance insufficient" in r.text:
                 return {'status': 0}
+
         if r.status_code == 200:
             return r.json()
 
