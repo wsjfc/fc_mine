@@ -104,15 +104,16 @@ def auto_balance():
         amount *= 0.98
         trading_amont = ("{0:.%df}" % (2)).format(amount)
         trading_amont = float(trading_amont)
-        status = fcoin.sell(trading_sym, str(price), trading_amont)
-        print('buy  status: ' + pretty_str(str(status)))
-        if status == None:
-            status = {'status': -1}
-        while status['status'] != 0:
-            time.sleep(api_access_interval)
+        if trading_amont > 5:
             status = fcoin.sell(trading_sym, str(price), trading_amont)
+            print('buy  status: ' + pretty_str(str(status)))
             if status == None:
                 status = {'status': -1}
+            while status['status'] != 0:
+                time.sleep(api_access_interval)
+                status = fcoin.sell(trading_sym, str(price), trading_amont)
+                if status == None:
+                    status = {'status': -1}
     else:
         order_side = 'buy'
         price = lowest_ask
@@ -120,15 +121,16 @@ def auto_balance():
         amount *= 0.98
         trading_amont = ("{0:.%df}" % (2)).format(amount)
         trading_amont = float(trading_amont)
-        status = fcoin.buy(trading_sym, str(price), trading_amont)
-        print('buy  status: ' + pretty_str(str(status)))
-        if status == None:
-            status = {'status': -1}
-        while status['status'] != 0:
-            time.sleep(api_access_interval)
+        if trading_amont > 5:
             status = fcoin.buy(trading_sym, str(price), trading_amont)
+            print('buy  status: ' + pretty_str(str(status)))
             if status == None:
                 status = {'status': -1}
+            while status['status'] != 0:
+                time.sleep(api_access_interval)
+                status = fcoin.buy(trading_sym, str(price), trading_amont)
+                if status == None:
+                    status = {'status': -1}
 
 def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug=False, ignore_loss=False):
     # get initial balance
