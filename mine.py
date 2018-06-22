@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from fcoin3 import Fcoin
-import os
+import os,sys
 import operator
 import argparse
 import concurrent.futures
@@ -9,8 +9,32 @@ import asyncio
 import time
 import inspect
 from pretty_dict import pretty_str
+import logging
 
 api_access_interval = 0.3
+
+def get_logger(log_file_path):
+    # 获取logger实例，如果参数为空则返回root logger
+    logger_ = logging.getLogger("AppName")
+
+    # 指定logger输出格式
+    formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
+
+    # 文件日志
+    file_handler = logging.FileHandler(log_file_path)
+    file_handler.setFormatter(formatter)  # 可以通过setFormatter指定输出格式
+
+    # 控制台日志
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.formatter = formatter  # 也可以直接给formatter赋值
+
+    # 为logger添加的日志处理器
+    logger_.addHandler(file_handler)
+    logger_.addHandler(console_handler)
+
+    # 指定日志的最低输出级别，默认为WARN级别
+    logger_.setLevel(logging.INFO)
+    return logger_
 
 def lineno():
     """Returns the current line number in our program."""
@@ -24,23 +48,23 @@ def check(fcoin):
     for sym in symbols:
         if sym['quote_currency'] == 'usdt':
             usdt_trades.append(sym['base_currency']+'usdt')
-    print(usdt_trades)
+    logger.info(usdt_trades)
 
     btc_trades = []
     for sym in symbols:
         if sym['quote_currency'] == 'btc':
             btc_trades.append(sym['base_currency']+'btc')
-    print(btc_trades)
+    logger.info(btc_trades)
 
     eth_trades = []
     for sym in symbols:
         if sym['quote_currency'] == 'eth':
             eth_trades.append(sym['base_currency']+'eth')
-    print(eth_trades)
+    logger.info(eth_trades)
 
     # get sorted symbol with the diff betweem lowest asks and highest bids
     for trades in [usdt_trades, btc_trades, eth_trades]:
-        print('#######################################')
+        logger.info('#######################################')
         diffs = {}
         for trade_symbol in trades:
             ret = fcoin.get_market_depth('L20', trade_symbol)
@@ -49,12 +73,12 @@ def check(fcoin):
                 len(ret['data']['asks']) > 0:
                 lowest_ask = ret['data']['asks'][0]
                 highest_bid = ret['data']['bids'][0]
-                print('lowest ask: %f, highest bid: %f.'
+                logger.info('lowest ask: %f, highest bid: %f.'
                       % (lowest_ask, highest_bid))
                 normed_diff = (lowest_ask - highest_bid)/highest_bid
                 diffs[trade_symbol] = normed_diff
         sorted_diff = sorted(diffs.items(), key=operator.itemgetter(1))
-        print(sorted_diff)
+        logger.info(sorted_diff)
 
     return eth_trades
 
@@ -87,8 +111,8 @@ def get_balance(fcoin, target_cur, base_cur):
 
 def auto_balance():
     target_cur_balance, base_cur_balance = get_balance(fcoin, target_currency, base_currency)
-    print("initial balance %s: %f" % (target_currency, target_cur_balance))
-    print("initial balance %s: %f" % (base_currency, base_cur_balance))
+    logger.info("initial balance %s: %f" % (target_currency, target_cur_balance))
+    logger.info("initial balance %s: %f" % (base_currency, base_cur_balance))
     trading_sym = target_currency + base_currency
     ret = fcoin.get_market_depth('L20', trading_sym)
     lowest_ask = ret['data']['asks'][0]
@@ -106,7 +130,7 @@ def auto_balance():
         trading_amont = float(trading_amont)
         if trading_amont > 5:
             status = fcoin.sell(trading_sym, str(price), trading_amont)
-            print('buy  status: ' + pretty_str(str(status)))
+            logger.info('buy  status: ' + pretty_str(str(status)))
             if status == None:
                 status = {'status': -1}
             while status['status'] != 0:
@@ -123,7 +147,7 @@ def auto_balance():
         trading_amont = float(trading_amont)
         if trading_amont > 5:
             status = fcoin.buy(trading_sym, str(price), trading_amont)
-            print('buy  status: ' + pretty_str(str(status)))
+            logger.info('buy  status: ' + pretty_str(str(status)))
             if status == None:
                 status = {'status': -1}
             while status['status'] != 0:
@@ -135,8 +159,8 @@ def auto_balance():
 def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug=False, ignore_loss=False):
     # get initial balance
     target_cur_balance, base_cur_balance = get_balance(fcoin, target_cur, base_cur)
-    print("initial balance %s: %f" % (target_cur, target_cur_balance))
-    print("initial balance %s: %f" % (base_cur, base_cur_balance))
+    logger.info("initial balance %s: %f" % (target_cur, target_cur_balance))
+    logger.info("initial balance %s: %f" % (base_cur, base_cur_balance))
     input("Press Enter to continue...")
 
     trading_sym = target_cur + base_currency
@@ -159,7 +183,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
     orders = []
     while target_cur_balance > 0 and base_cur_balance > 0:
         per_trade_start_time = time.time()
-        print("------- start trading session -------")
+        logger.info("------- start trading session -------")
 
         time.sleep(3.3)
         # get assets amount
@@ -193,10 +217,10 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
         lowest_ask = ret['data']['asks'][0]
         highest_bid = ret['data']['bids'][0]
-        print('lowest ask: %f, highest bid: %f.'
+        logger.info('lowest ask: %f, highest bid: %f.'
               % (lowest_ask, highest_bid))
         trade_price = ((lowest_ask + highest_bid)/2)
-        print('trading price:%f' % trade_price)
+        logger.info('trading price:%f' % trade_price)
 
         need_basecurrency_amount = trade_price * target_cur_balance * 0.99
         trading_basecurrency_amount = base_cur_balance * 0.99
@@ -210,14 +234,14 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
         trading_amont = ("{0:.%df}" % (amount_precision)).format(trading_amont)
         trading_amont = float(trading_amont)
-        print('trading amount: ###--- %f ---### %f' % (trading_amont, trading_amont/prev_trading_amount))
+        logger.info('trading amount: ###--- %f ---### %f' % (trading_amont, trading_amont/prev_trading_amount))
         if trading_amont > 5:
-            print("sell&buy...")
+            logger.info("sell&buy...")
             def sell_(params):
                 trading_sym, trade_price, trading_amont = params
                 #time.sleep(1)
                 status = fcoin.sell(trading_sym, str(trade_price), trading_amont)
-                print('sell status: ' + str(status))
+                logger.info('sell status: ' + str(status))
                 if status == None:
                     status = {'status': -1}
                 while status['status'] != 0:
@@ -232,7 +256,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 trading_sym, trade_price, trading_amont = params
                 #time.sleep(1)
                 status = fcoin.buy(trading_sym, str(trade_price), trading_amont)
-                print('buy  status: ' + str(status))
+                logger.info('buy  status: ' + str(status))
                 if status == None:
                     status = {'status': -1}
                 while status['status'] != 0:
@@ -276,9 +300,9 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
                 orders_data = orders_submitted['data'] + orders_partial_filled['data']
                 if orders_submitted is not None:
-                    print(pretty_str(orders_submitted))
+                    logger.info(pretty_str(orders_submitted))
                 if orders_partial_filled is not None:
-                    print(pretty_str(orders_partial_filled))
+                    logger.info(pretty_str(orders_partial_filled))
                 if len(orders_data) == 0:
                     waiting = False
                 else:
@@ -302,7 +326,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         time.sleep(api_access_interval)
 
                         cancel_status = fcoin.cancel_order(order['id'])
-                        print('cancel status: %s' % cancel_status)
+                        logger.info('cancel status: %s' % cancel_status)
 
                         canceled = False
                         detail_status = ""
@@ -310,7 +334,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         while cancel_status == None:
                             time.sleep(3)
                             status = fcoin.get_order(order_id=order['id'])
-                            print(pretty_str(status))
+                            logger.info(pretty_str(status))
                             while status == None:
                                 time.sleep(5)
                                 status = fcoin.get_order(order_id=order['id'])
@@ -336,16 +360,16 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                 time.sleep(3)
                                 status = fcoin.get_order(order_id=order['id'])
                                 if status != None:
-                                    print(pretty_str(status))
+                                    logger.info(pretty_str(status))
                                     detail_status = status['data']['state']
                                     if detail_status == "canceled" or \
                                                     detail_status == "filled" or \
                                                     detail_status == "partial_canceled":
-                                        print("cancel order result: %s" % detail_status)
+                                        logger.info("cancel order result: %s" % detail_status)
                                         order = status['data']
                                         canceled = True
                                     else:
-                                        print('not canceled yet: %s.' % detail_status)
+                                        logger.info('not canceled yet: %s.' % detail_status)
                                         time.sleep(2)
                                 else:
                                     time.sleep(1)
@@ -366,7 +390,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                             if cancel_status != None and cancel_status['status'] == 0 and order_amount > 5:
                                 if order_side == 'buy':
                                     canceld_order_price, canceld_order_amount = trade_dict['buy']
-                                    print("canceled order price: %f" % canceld_order_price)
+                                    logger.info("canceled order price: %f" % canceld_order_price)
                                     cumulative_exchange -= canceld_order_price * canceld_order_amount
                                     usdt_balance = 0
                                     balances = None
@@ -396,7 +420,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                     if order_amount > 5:
                                         time.sleep(api_access_interval)
                                         status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
-                                        print(pretty_str(str(status)) + str(lineno()))
+                                        logger.info(pretty_str(str(status)) + str(lineno()))
                                         if status == None:
                                             status = {'status': -1}
                                         elif status['status'] == 0:
@@ -405,7 +429,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                         while status['status'] != 0:
                                             time.sleep(4)
                                             status = fcoin.buy(trading_sym, str(lowest_ask), order_amount)
-                                            print(pretty_str(str(status)) + str(lineno()))
+                                            logger.info(pretty_str(str(status)) + str(lineno()))
                                             if status == None:
                                                 status = {'status': -1}
                                             elif status['status'] == 1002:
@@ -416,7 +440,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
                                 elif order_side == 'sell':
                                     canceld_order_price, canceld_order_amount = trade_dict['sell']
-                                    print("canceled order price: %f" % canceld_order_price)
+                                    logger.info("canceled order price: %f" % canceld_order_price)
                                     cumulative_exchange -= canceld_order_price * canceld_order_amount
 
                                     time.sleep(api_access_interval)
@@ -430,7 +454,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
                                     time.sleep(api_access_interval)
                                     status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
-                                    print(pretty_str(str(status)) + str(lineno()))
+                                    logger.info(pretty_str(str(status)) + str(lineno()))
                                     if status == None:
                                         status = {'status': -1}
                                     elif status['status'] == 0:
@@ -439,7 +463,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                                     while status['status'] != 0:
                                         time.sleep(4)
                                         status = fcoin.sell(trading_sym, str(highest_bid), order_amount)
-                                        print(pretty_str(str(status)) + ' ' + str(lineno()))
+                                        logger.info(pretty_str(str(status)) + ' ' + str(lineno()))
                                         if status == None:
                                             status = {'status': -1}
                                         elif status['status'] == 0:
@@ -450,13 +474,13 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
             prev_trading_amount = trading_amont
             trade_ctr += 1
-            print("trade counter: %d" % trade_ctr)
+            logger.info("trade counter: %d" % trade_ctr)
 
             if trade_ctr % 20 == 0:
                 auto_balance()
 
             if trade_ctr % 30 == 0 and not ignore_loss:
-                print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
+                logger.info(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
                 max_order_limit = 100
                 time.sleep(api_access_interval)
                 orders_filled = fcoin_get_order(fcoin, 'ftusdt', 'filled', max_order_limit)
@@ -489,24 +513,36 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                         else:
                             trading_loss -= float(executed_val) * float(price)
                         orders.append(order['id'])
-                print("trading loss: %f, loss fraction: %f, estimated profit fraction: %f" %
+                logger.info("trading loss: %f, loss fraction: %f, estimated profit fraction: %f" %
                       (trading_loss, trading_loss/initial_assets, (1-(0.999**trade_ctr))*0.2))
                 last_check_ts = time.time()
                 last_check_ts *= 1000
-                print(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
+                logger.info(' $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ ')
 
         else:
-            print("trading_amount should above 5.")
+            logger.info("trading_amount should above 5.")
             auto_balance()
 
-        print("trade time: " "{0:.2f}".format(time.time() - per_trade_start_time))
-        print("-------- end --------")
+        logger.info("trade time: " "{0:.2f}".format(time.time() - per_trade_start_time))
+        logger.info("-------- end --------")
 
     target_cur_balance, base_cur_balance = get_balance(fcoin=fcoin)
-    print("final balance %s: %f" % (target_cur, target_cur_balance))
-    print("final balance %s: %f" % (base_cur, base_cur_balance))
+    logger.info("final balance %s: %f" % (target_cur, target_cur_balance))
+    logger.info("final balance %s: %f" % (base_cur, base_cur_balance))
 
     return
+
+def find_next_log_file_name(log_file_path):
+    last_max_index = -1
+    for root, dirs, files in os.walk(log_file_path):
+        for fname in files:
+            if os.path.splitext(fname)[-1].lower() in ['.log']:
+                if '_' in fname:
+                    last_index = int(fname.split('_')[-1].split('.')[0])
+                    if last_index > last_max_index:
+                        last_max_index = last_index
+
+    return os.path.join(log_file_path, 'mining_%d.log' % (last_max_index+1))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -538,7 +574,12 @@ if __name__ == "__main__":
     target_currency = sym_pair.split('_')[0]
     base_currency = sym_pair.split('_')[1]
 
-    print('Happy mining, %s.' % runner)
+    log_dir = 'log'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    log_file_path = find_next_log_file_name('./' + log_dir)
+    logger = get_logger(log_file_path)
+    logger.info('Happy mining, %s.' % runner)
 
     if MODE == 'check':
         check(fcoin=fcoin)
@@ -550,7 +591,7 @@ if __name__ == "__main__":
         orders_partial_filled = fcoin_get_order(fcoin, 'ftusdt', 'partial_filled')
         for order in orders_submitted['data'] + orders_partial_filled['data']:
             cancel_status = fcoin.cancel_order(order['id'])
-            print('cancel status: %s' % pretty_str(cancel_status))
+            logger.info('cancel status: %s' % pretty_str(cancel_status))
             if cancel_status == None:
                 cancel_status = {'status': -1}
             while cancel_status['status'] != 0 and cancel_status['status'] != 3008:
@@ -558,13 +599,13 @@ if __name__ == "__main__":
                 cancel_status = fcoin.cancel_order(order['id'])
                 if cancel_status == None:
                     cancel_status = {'status': -1}
-        print('done')
+                logger.info('done')
 
     elif MODE == 'split':
         auto_balance()
 
         target_cur_balance, base_cur_balance = get_balance(fcoin, target_currency, base_currency)
-        print("balance of %s: %f" % (target_currency, target_cur_balance))
-        print("balance of %s: %f" % (base_currency, base_cur_balance))
+        logger.info("balance of %s: %f" % (target_currency, target_cur_balance))
+        logger.info("balance of %s: %f" % (base_currency, base_cur_balance))
 
 
