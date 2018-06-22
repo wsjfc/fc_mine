@@ -507,10 +507,11 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", default='check',  help="model type: check; mine; test.")
+    parser.add_argument("--mode", default='mine',  help="model type: check; mine; test.")
     parser.add_argument("--cur", default='ft_usdt',  help="currency type: ft_usdt, etc_usdt, omg_eth ...")
     parser.add_argument("--debug", default=False, action='store_true')
     parser.add_argument("--ignore", default=False, action='store_true')
+    parser.add_argument("--runner", default='han',  help="any name, indication of runner.")
 
     args = parser.parse_args()
 
@@ -530,8 +531,11 @@ if __name__ == "__main__":
     sym_pair = args.cur
     DEBUG = args.debug
     ignore_loss = args.ignore
+    runner = args.runner
     target_currency = sym_pair.split('_')[0]
     base_currency = sym_pair.split('_')[1]
+
+    print('Happy mining, %s.' % runner)
 
     if MODE == 'check':
         check(fcoin=fcoin)
