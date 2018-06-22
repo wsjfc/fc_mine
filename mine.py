@@ -278,7 +278,7 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 if orders_submitted is not None:
                     print(pretty_str(orders_submitted))
                 if orders_partial_filled is not None:
-                    print(pretty_str(orders_submitted))
+                    print(pretty_str(orders_partial_filled))
                 if len(orders_data) == 0:
                     waiting = False
                 else:

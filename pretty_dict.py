@@ -48,10 +48,10 @@ def pretty_str(obj, pre_blank=0):
                 values += value + ' '
                 pre_blank += len(keys)
         if 'sell' in values:
-            return grey_start + keys[:-1] + color_end + '\n' + red_start + values[:-1] + color_end
+            return blue_start + keys[:-1] + color_end + '\n' + red_start + values[:-1] + color_end
         if 'buy' in values:
-            return grey_start + keys[:-1] + color_end + '\n' + green_start + values[:-1] + color_end
-        return blue_start + keys[:-1] + color_end + '\n' + values[:-1]
+            return blue_start + keys[:-1] + color_end + '\n' + green_start + values[:-1] + color_end
+        return grey_start + keys[:-1] + color_end + '\n' + values[:-1]
 
     return str(obj)
 
