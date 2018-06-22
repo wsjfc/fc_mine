@@ -275,7 +275,10 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
                 time.sleep(api_access_interval)
                 orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
                 orders_data = orders_submitted['data'] + orders_partial_filled['data']
-                print(pretty_str(orders_data))
+                if orders_submitted is not None:
+                    print(pretty_str(orders_submitted))
+                if orders_partial_filled is not None:
+                    print(pretty_str(orders_submitted))
                 if len(orders_data) == 0:
                     waiting = False
                 else:

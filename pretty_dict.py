@@ -59,7 +59,7 @@ if __name__ == "__main__":
     d = {'id': '2CmZjhaE46v0I85YOjwXzF6dVKqgQmdzzhA_55AWLmY=', 'side': 'buy', 'fill_fees': '0.000000000000000000',
     'source': 'api', 'amount': '294.760000000000000000', 'created_at': 1529361386780, 'symbol': 'ftusdt',
     'filled_amount': '0.000000000000000000', 'type': 'limit', 'executed_value': '0.000000000000000000',
-    'state': 'submitted', 'price': '0.808367000000000000'}
+    'state': 'partial_filled', 'price': '0.808367000000000000'}
     f = {'status': 0, 'data': [d, d]}
     g = {'status': 0, 'data': d}
 
