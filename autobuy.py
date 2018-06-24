@@ -8,8 +8,8 @@ import smtplib
 from email.mime.text import MIMEText
 
 msg_from = '157373692@qq.com' # 发送方邮箱
-passwd = os.environ["MAIL_PW"] # 填入发送方邮箱的授权码
-msg_to = '157373692@qq.com' # 收件人邮箱
+passwd = 'rizeyjbyejzxbici' # 填入发送方邮箱的授权码
+msg_to = 'hanmaokun@outlook.com' # 收件人邮箱
 
 def check(fcoin):
     usdt_balance = 0

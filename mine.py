@@ -11,7 +11,7 @@ import inspect
 from pretty_dict import pretty_str
 import logging
 
-api_access_interval = 0.1
+api_access_interval = 0.3
 
 def get_logger(log_file_path):
     # 获取logger实例，如果参数为空则返回root logger
@@ -89,7 +89,7 @@ def fcoin_get_order(fcoin, sym, state, limits=20):
         if orders != None:
             return orders
         else:
-            time.sleep(1)
+            time.sleep(3)
 
 def get_balance(fcoin, target_cur, base_cur):
     target_cur_balance = 0
@@ -104,7 +104,7 @@ def get_balance(fcoin, target_cur, base_cur):
                 elif bl['currency'] == base_cur:
                     base_cur_balance = float(bl['available'])
         else:
-            time.sleep(1)
+            time.sleep(api_access_interval)
 
     return target_cur_balance, base_cur_balance
 
@@ -294,9 +294,9 @@ def mining(fcoin, target_cur, base_cur, price_precision, amount_precision, debug
             if debug:
                 input('Press Enter to check order status.')
             while waiting:
-                time.sleep(0.5)
+                time.sleep(2)
                 orders_submitted = fcoin_get_order(fcoin, trading_sym, 'submitted')
-                time.sleep(api_access_interval)
+                time.sleep(0.1)
                 orders_partial_filled = fcoin_get_order(fcoin, trading_sym, 'partial_filled')
                 orders_data = orders_submitted['data'] + orders_partial_filled['data']
                 if orders_submitted is not None:
@@ -608,4 +608,7 @@ if __name__ == "__main__":
         logger.info("balance of %s: %f" % (target_currency, target_cur_balance))
         logger.info("balance of %s: %f" % (base_currency, base_cur_balance))
 
+    elif MODE == 'test':
+        orders_data = fcoin.list_orders(symbol='ftusdt', states='filled', limit=20)
+        print(orders_data)
 
